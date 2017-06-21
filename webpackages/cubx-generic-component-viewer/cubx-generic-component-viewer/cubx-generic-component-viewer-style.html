@@ -1,0 +1,77 @@
+<dom-module id="cubx-generic-component-viewer-style">
+    <template>
+        <!--
+        Get help: https://www.polymer-project.org/1.0/docs/devguide/styling.html#xscope-styling-details
+        -->
+        <style>
+            #component_view_holder{
+                border: solid 1px #ddd;
+            }
+
+            rect.componentViewAtom.member.cubx-generic-component-viewer{
+                fill: #e7e7e7;
+            }
+
+            #component_view_holder_title{
+                display: none;
+            }
+
+            g#root {
+                opacity: 0;
+            }
+
+            text.componentViewHeaderLabel {
+                fill: #000;
+                stroke: none;
+                text-anchor: middle;
+            }
+
+            .componentView {
+                fill: #fff;
+                stroke: #000;
+                stroke-width: 1px;
+            }
+
+            .connectionView {
+                stroke: #000;
+                stroke-width: 1;
+                fill: none;
+            }
+
+            .arrowEnd {
+                stroke: #000;
+                stroke-width: 1;
+                fill: #000;
+            }
+
+            .slotViewAtom {
+                stroke: #000;
+                stroke-width: 1;
+                fill: #fff;
+            }
+            .slotViewLabel, .connectionViewLabel{
+                fill: #000;
+                stroke: none;
+            }
+
+            .info_tooltip{
+                background: #fff;
+                box-shadow: 0 0 5px #999999;
+                color: #333;
+                font-size: 14px;
+                position: fixed;
+                padding: 5px;
+                max-width: 16em;
+                word-wrap: break-word;
+                z-index: 1060;
+            }
+            #saveDiagramBDiv{
+                padding-top: 1em;
+                padding-bottom: 1em;
+                margin-right: 0px;
+                margin-left: auto;
+                width: 10em;
+            }
+        </style>
+    </template>
+</dom-module>

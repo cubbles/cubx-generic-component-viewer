@@ -1,0 +1,20 @@
+<link rel="import" href="cubx-generic-component-viewer-style.html">
+<dom-module id="cubx-generic-component-viewer">
+
+    <template>
+        <style include="cubx-generic-component-viewer-style"></style>
+        <div class="col-md-10">
+            <h2 id="component_view_holder_title">{{model.viewerTitle}}</h2>
+        </div>
+        <div id="saveDiagramBDiv">
+            <button class="btn btn-default" id="saveDiagramB" on-click="_saveAsSvg">
+                <i class="glyphicon glyphicon-save"></i>
+                <span>Save diagram</span>
+            </button>
+        </div>
+        <div id="component_view_holder"></div>
+    </template>
+
+    <script src="cubx-generic-component-viewer.js"></script>
+</dom-module>
+

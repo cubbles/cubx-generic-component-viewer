@@ -1,0 +1,127 @@
+{
+  "name": "cubx-generic-component-viewer",
+  "groupId": "",
+  "version": "0.1.0-SNAPSHOT",
+  "modelVersion": "9.1.1",
+  "docType": "webpackage",
+  "author": {
+    "name": "Edwin Gamboa",
+    "email": "edwingamboa355@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": [],
+  "man": [],
+  "artifacts": {
+    "apps": [
+      {
+        "artifactId": "docs",
+        "description": "Generated webpackage documentation.",
+        "runnables": [
+          {
+            "name": "docs",
+            "path": "/index.html",
+            "description": "Show the interface of this component."
+          }
+        ]
+      }
+    ],
+    "elementaryComponents": [
+      {
+        "artifactId": "cubx-generic-component-viewer",
+        "description": "Component to visualise the interface and/or dataflow of a component without using a manifest",
+        "runnables": [
+          {
+            "name": "demo",
+            "path": "/demo/index.html",
+            "description": "Demo app..."
+          },
+          {
+            "name": "docs",
+            "path": "/docs/index.html",
+            "description": "Show the interface of this component."
+          }
+        ],
+        "resources": [
+          "cubx-generic-component-viewer.html"
+        ],
+        "dependencies": [
+          {
+            "webpackageId": "cubx.core.rte@2.3.1",
+            "artifactId": "cubxpolymer"
+          },
+          {
+            "webpackageId": "klayjsd3-0.3.5@1.1.0",
+            "artifactId": "klayjs-d3"
+          },
+          {
+            "webpackageId": "jquery-2.1.4@1.2.0",
+            "artifactId": "jquery"
+          },
+          {
+            "webpackageId": "d3-tip-0.6.7@1.0.0",
+            "artifactId": "d3-tip"
+          },
+          {
+            "webpackageId": "com.incowia.cubx-webpackage-viewer@1.6.0",
+            "artifactId": "file-saver"
+          }
+        ],
+        "slots": [
+          {
+            "slotId": "definitions",
+            "type": "object",
+            "description": "Object containing the definitions to be used by the component viewer. The object has the following structure {components: [], members: [], connections: [], componentArtifactId: 'compoundArtifactId'}",
+            "direction": [
+              "input"
+            ]
+          },
+          {
+            "slotId": "viewerWidth",
+            "description": "Width of the component viewer (e.g. 100%, 100px, 100em). By default it is '100%'",
+            "type": "string",
+            "direction": [
+              "input"
+            ],
+            "value": "100%"
+          },
+          {
+            "slotId": "viewerHeight",
+            "type": "string",
+            "description": "Height of the component viewer (e.g. 100%, 100px, 100em).",
+            "direction": [
+              "input"
+            ]
+          },
+          {
+            "slotId": "viewerTitle",
+            "type": "string",
+            "description": "Title for the component viewer. By default it is 'Interface view' for an elementary component and 'Dataflow view' for a compound component",
+            "direction": [
+              "input",
+              "output"
+            ]
+          },
+          {
+            "slotId": "showTitle",
+            "type": "boolean",
+            "description": "Boolean indicating whether the title should be displayed",
+            "direction": [
+              "input"
+            ],
+            "value": false
+          },
+          {
+            "slotId": "scale",
+            "type": "string",
+            "description": "Ratio for the viewer to be scaled, note that it should be a STRING. Use 'auto' if you want it to be automatically calculated. Or 'none' to avoid scaling.",
+            "direction": [
+              "input"
+            ]
+          }
+        ]
+      }
+    ],
+    "compoundComponents": [],
+    "utilities": []
+  }
+}
