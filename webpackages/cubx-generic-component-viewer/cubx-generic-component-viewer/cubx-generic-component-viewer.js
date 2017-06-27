@@ -37,6 +37,7 @@
     MEMBER_PORT_LABEL_PLACEMENT: 'INSIDE',
     MEMBER_LABEL_PLACEMENT: 'V_TOP H_CENTER',
     MEMBER_PORT_ALIGNMENT: 'BEGIN',
+    AD_HOC_COMPONENT: {artifactId: 'ad-hoc-component', slots: [], webpackageId: ''},
 
     /**
      * Manipulate an element’s local DOM when the element is created.
@@ -128,17 +129,19 @@
      * @private
      */
     _isValidScale: function (scale) {
-      var scaleAsFloat = -1;
       if (!scale) {
         return false;
-      }
-      if (scale !== 'auto' && scale !== 'none') {
+      } else if (scale === 'auto' || scale === 'none') {
+		  return true;
+	  }
+      else {
+		  var scaleAsFloat = -1;
         scaleAsFloat = parseFloat(scale);
         if (isNaN(scaleAsFloat)) {
           return false;
         }
+		return scaleAsFloat > 0;
       }
-      return scaleAsFloat > 0;
     },
 
     /**
@@ -155,7 +158,7 @@
             ' artifactId was not found in definitions');
         }
       } else {
-        this._component = {artifactId: 'ad-hoc-component', slots: [], webpackageId: ''};
+        this._component = this.AD_HOC_COMPONENT;
       }
       this._updateView();
     },
@@ -220,7 +223,7 @@
         this.getDefinitions().members.forEach(addMemberToGraph.bind(this));
       }
 
-      function addMemberToGraph(member) {
+      function addMemberToGraph (member) {
         var componentDefOfMember = this._getComponentDefOfMember(member);
         graphMembers.push(this._generateGraphMember(componentDefOfMember, member));
       }
@@ -970,7 +973,7 @@
       source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
 
       var blob = new Blob([source], {type: 'image/svg+xml'});
-      saveAs(blob, this.getComponentArtifactId() + '.svg');
+      saveAs(blob, this._component.artifactId + '.svg');
     },
 
     /**

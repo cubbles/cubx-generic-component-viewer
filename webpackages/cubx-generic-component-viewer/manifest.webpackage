@@ -62,7 +62,7 @@
             "artifactId": "d3-tip"
           },
           {
-            "webpackageId": "com.incowia.cubx-webpackage-viewer@1.6.0",
+            "webpackageId": "file-saver-1.3.2@1.0.0",
             "artifactId": "file-saver"
           }
         ],
