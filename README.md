@@ -1,4 +1,6 @@
-## cubx-generic-component-viewer
+# cubx-generic-component-viewer
 
-<hr/>
-Note This page is generated based on the markdown-syntax. For details see <http://daringfireball.net/projects/markdown/syntax/>
+This project contains the [cubx-generic-component-viewer](https://github.com/cubbles/cubx-generic-component-viewer/tree/master/webpackages/cubx-generic-component-viewer) webpackage, which contains the components to visualize the interface and dataflow of a component without using a manifest file.
+
+[Want to get to know the Cubbles Platform?](https://cubbles.github.io)
+
