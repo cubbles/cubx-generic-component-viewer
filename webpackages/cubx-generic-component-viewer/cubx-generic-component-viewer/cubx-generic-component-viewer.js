@@ -50,18 +50,18 @@
      * Manipulate an element’s local DOM when the element is created and initialized.
      */
     ready: function () {
-      var viewHolder = this.$$('#' + this.VIEW_HOLDER_ID);
-      viewHolder.id = this.VIEW_HOLDER_ID;
-      viewHolder.style.width = this.getViewerWidth();
-      viewHolder.style.height = this.getViewerHeight() || window.innerHeight * 0.7 + 'px';
-      viewHolder.style.overflow = 'hidden';
-      viewHolder.style.resize = 'vertical';
     },
 
     /**
      * Manipulate an element’s local DOM when the element is attached to the document.
      */
     attached: function () {
+      var viewHolder = this.$$('#' + this.VIEW_HOLDER_ID);
+      viewHolder.id = this.VIEW_HOLDER_ID;
+      viewHolder.style.width = this.getViewerWidth();
+      viewHolder.style.height = this.getViewerHeight() || window.innerHeight * 0.7 + 'px';
+      viewHolder.style.overflow = 'hidden';
+      viewHolder.style.resize = 'vertical';
     },
 
     /**
@@ -194,9 +194,6 @@
      * @private
      */
     _generateAndDrawComponentGraph: function () {
-      if (!this._cubxReady) {
-        return;
-      }
       var componentGraph = {id: 'root', children: []};
       var rootComponent = this._generateGraphMember(
         this._component,
