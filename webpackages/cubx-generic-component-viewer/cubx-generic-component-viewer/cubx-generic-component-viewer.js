@@ -450,7 +450,8 @@
         target: target,
         targetPort: targetPort,
         hookFunction: compoundConnection.hookFunction || '',
-        tooltipHTML: ('<strong>Hook function:</strong><p>' + compoundConnection.hookFunction + '</p>') || ''
+        tooltipHTML: ('<strong>Hook function:</strong><p>' + compoundConnection.hookFunction + '</p>') || '',
+        highlighted: false
       };
     },
 
@@ -844,6 +845,16 @@
         });
     },
 
+    _highlightConnection: function (d3select) {
+      d3select.classed('highlighted', true);
+    },
+
+    _undoHighlightConnection: function (d3select, d) {
+      if (!d.highlighted) {
+        d3select.classed('highlighted', false);
+      }
+    },
+
     /**
      * Draw the connections and their ids as labels
      * @param {Object} connectionData - Data of each connection (D3)
@@ -874,7 +885,21 @@
         })
         .attr('class', 'connectionView ' + self.is)
         .attr('d', 'M0 0')
-        .attr('marker-end', 'url(#end)');
+        .attr('marker-end', 'url(#end)')
+        .on('mouseover', function (d) {
+          self._highlightConnection(d3.select(this));
+        })
+        .on('mouseout', function (d) {
+          self._undoHighlightConnection(d3.select(this), d);
+        })
+        .on('click', function (d) {
+          d.highlighted = !d.highlighted;
+          if (d.highlighted) {
+            self._highlightConnection(d3.select(this));
+          } else {
+            self._undoHighlightConnection(d3.select(this), d);
+          }
+        });
 
       var connectionViewLabel = connectionData.enter()
         .append('text')
