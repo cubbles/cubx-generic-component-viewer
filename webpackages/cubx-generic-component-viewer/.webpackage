@@ -4,10 +4,9 @@
       "url": "http://cubbles-base-local/sandbox",
       "proxy": ""
     },
-	"dryRun": {
+	"sandbox": {
       "url": "https://cubbles.world/sandbox",
-      "proxy": "",
-      "dryRun": true
+      "proxy": ""
     },
     "release": {
       "url": "https://cubbles.world/shared",

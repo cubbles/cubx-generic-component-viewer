@@ -59,7 +59,7 @@
       var viewHolder = this.$$('#' + this.VIEW_HOLDER_ID);
       viewHolder.id = this.VIEW_HOLDER_ID;
       viewHolder.style.width = this.getViewerWidth();
-      viewHolder.style.height = this.getViewerHeight() || window.innerHeight * 0.7 + 'px';
+      viewHolder.style.height = this.getViewerHeight() || this.parentNode.clientHeight * 0.7 + 'px';
       viewHolder.style.overflow = 'hidden';
       viewHolder.style.resize = 'vertical';
     },
@@ -82,6 +82,10 @@
      *  Observe the Cubbles-Component-Model: If value for slot 'viewerHeight' has changed ...
      */
     modelViewerHeightChanged: function (viewerHeight) {
+      if (viewerHeight.indexOf('%') !== -1) {
+        var proportion = parseInt(viewerHeight.substring(0, viewerHeight.indexOf('%'))) / 100;
+        viewerHeight = this.parentNode.clientHeight * proportion + 'px';
+      }
       this.$$('#' + this.VIEW_HOLDER_ID).style.height = viewerHeight;
     },
 
