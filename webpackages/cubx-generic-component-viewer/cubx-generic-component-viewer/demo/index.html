@@ -66,7 +66,7 @@
                     'copyValue': true,
                     'destination': {'memberIdRef': 'mdViewer', 'slot': 'markdown'},
                     'source': {'memberIdRef': 'genericMapper', 'slot': 'mappedString'},
-                    'hookFunction': ''
+                    'hookFunction': 'sampleFunction'
                 },
                 {
                     'connectionId': 'content',
@@ -79,6 +79,7 @@
             componentArtifactId: ''
         };
         document.addEventListener('cifReady', function () {
+            genericViewer.setViewerHeight(window.innerHeight * 0.7 + 'px');
             genericViewer.setDefinitions(definitions);
         });
     })()
