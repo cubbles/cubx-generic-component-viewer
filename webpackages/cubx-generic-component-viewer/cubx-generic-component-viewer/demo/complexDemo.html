@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>&lt;cubx-generic-component-viewer&gt; demo</title>
+
+    <script src="../../../cubx.core.rte@2.3.1/webcomponents-lite/webcomponents-lite.js"></script>
+
+    <script>
+        window.cubx = {
+            "CRCInit": {
+                "rootDependencies": [
+                    {
+                        "webpackageId": "bootstrap-3.3.5@1.1.1",
+                        "artifactId": "bootstrap-bootstrap-css-only"
+                    }
+                ]
+            }
+        }
+    </script>
+    <script src="../../../cubx.core.rte@2.3.1/crc-loader/js/main.js" data-crcinit-loadcif="true"></script>
+
+</head>
+<body>
+<!--  Place cubbles components there. -->
+<cubx-generic-component-viewer cubx-webpackage-id="this"></cubx-generic-component-viewer>
+
+<script>
+    (function () {
+        'use strict';
+        var genericViewer = document.querySelector('cubx-generic-component-viewer');
+        var definitions = {
+            "components": {
+                "pcp-select-medium": {
+                    "artifactId": "pcp-select-medium",
+                    "slots": [
+                        {
+                            "slotId": "selectedMedium",
+                            "direction": [
+                                "output",
+                                "input"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.ui@1.3-SNAPSHOT"
+                },
+                "pcp-page-data-cockpit": {
+                    "artifactId": "pcp-page-data-cockpit",
+                    "slots": [
+                        {
+                            "slotId": "selectedMedium",
+                            "direction": [
+                                "input",
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "selectedYear",
+                            "direction": [
+                                "input",
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "selectionYears",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "selectedPeriod",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "energyBarTicks",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "coveredQuantityPercentage",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "selectedPriceRecord",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "workprice",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "savingToCurrentPrice",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "savingToHistoricalMinPrice",
+                            "direction": [
+                                "output"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.pages@1.2-SNAPSHOT"
+                },
+                "pcp-tabs": {
+                    "artifactId": "pcp-tabs",
+                    "slots": [
+                        {
+                            "slotId": "selected",
+                            "direction": [
+                                "output",
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "tabs",
+                            "direction": [
+                                "input"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.ui@1.3-SNAPSHOT"
+                },
+                "pcp-buttons": {
+                    "artifactId": "pcp-buttons",
+                    "slots": [
+                        {
+                            "slotId": "selected",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "data",
+                            "direction": [
+                                "input"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.ui.pcp-buttons@1.1-SNAPSHOT"
+                },
+                "pcp-data-helper": {
+                    "artifactId": "pcp-data-helper",
+                    "slots": [
+                        {
+                            "slotId": "openLink",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "dataOutput",
+                            "direction": [
+                                "output"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.ui.pcp-data-helper@1.0-SNAPSHOT"
+                },
+                "pcp-info-slide-item": {
+                    "artifactId": "pcp-info-slide-item",
+                    "slots": [
+                        {
+                            "slotId": "item",
+                            "direction": [
+                                "output"
+                            ]
+                        },
+                        {
+                            "slotId": "subheading",
+                            "direction": [
+                                "input"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.ui@1.3-SNAPSHOT"
+                },
+                "array-concat": {
+                    "artifactId": "array-concat",
+                    "slots": [
+                        {
+                            "slotId": "a",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "b",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "output",
+                            "direction": [
+                                "output"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.pages@1.2-SNAPSHOT"
+                },
+                "pcp-info-slider": {
+                    "artifactId": "pcp-info-slider",
+                    "slots": [
+                        {
+                            "slotId": "slides",
+                            "direction": [
+                                "input"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.ui@1.3-SNAPSHOT"
+                },
+                "pcp-gauge-chart-index": {
+                    "artifactId": "pcp-gauge-chart-index",
+                    "slots": [
+                        {
+                            "slotId": "highest",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "lowest",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "current",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "title",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "link",
+                            "direction": [
+                                "input"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.ui.gauge-chart@1.3-SNAPSHOT"
+                },
+                "pcp-purchased-energy-bar": {
+                    "artifactId": "pcp-purchased-energy-bar",
+                    "slots": [
+                        {
+                            "slotId": "ticks",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "percentage",
+                            "direction": [
+                                "input"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.ui@1.3-SNAPSHOT"
+                },
+                "pcp-localstorage-dataprovider": {
+                    "artifactId": "pcp-localstorage-dataprovider",
+                    "slots": [
+                        {
+                            "slotId": "selectedYear",
+                            "direction": [
+                                "input"
+                            ]
+                        },
+                        {
+                            "slotId": "selectedMedium",
+                            "direction": [
+                                "input"
+                            ]
+                        }
+                    ],
+                    "webpackageId": "com.incowia.pcp.cache@1.3-SNAPSHOT"
+                }
+            },
+            "members": [
+                {
+                    "memberId": "selectedMedium",
+                    "artifactId": "pcp-select-medium"
+                },
+                {
+                    "memberId": "pageController",
+                    "artifactId": "pcp-page-data-cockpit"
+                },
+                {
+                    "memberId": "tabs",
+                    "artifactId": "pcp-tabs"
+                },
+                {
+                    "memberId": "buttons",
+                    "artifactId": "pcp-buttons"
+                },
+                {
+                    "memberId": "data-helper",
+                    "artifactId": "pcp-data-helper"
+                },
+                {
+                    "memberId": "slideItemBaseprice",
+                    "artifactId": "pcp-info-slide-item"
+                },
+                {
+                    "memberId": "concatSlideItem1",
+                    "artifactId": "array-concat"
+                },
+                {
+                    "memberId": "slideItemWorkprice",
+                    "artifactId": "pcp-info-slide-item"
+                },
+                {
+                    "memberId": "concatSlideItemsForInfoSlider",
+                    "artifactId": "array-concat"
+                },
+                {
+                    "memberId": "info-slider",
+                    "artifactId": "pcp-info-slider"
+                },
+                {
+                    "memberId": "gauge",
+                    "artifactId": "pcp-gauge-chart-index"
+                },
+                {
+                    "memberId": "energyBar",
+                    "artifactId": "pcp-purchased-energy-bar"
+                },
+                {
+                    "memberId": "data-provider",
+                    "artifactId": "pcp-localstorage-dataprovider"
+                },
+                {
+                    "memberId": "slideItemSavingToCurrentPrice1",
+                    "artifactId": "pcp-info-slide-item"
+                },
+                {
+                    "memberId": "slideItemSavingToHistoricalMinPrice1",
+                    "artifactId": "pcp-info-slide-item"
+                },
+                {
+                    "memberId": "concatItemOneAndTwo",
+                    "artifactId": "array-concat"
+                }
+            ],
+            "connections": [
+                {
+                    "connectionId": "con-selectedMediumToPageController",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedMedium"
+                    },
+                    "source": {
+                        "memberIdRef": "selectedMedium",
+                        "slot": "selectedMedium"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "con-selectedYear",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedYear"
+                    },
+                    "source": {
+                        "memberIdRef": "tabs",
+                        "slot": "selected"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "buttons-connection-selected",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "data-helper",
+                        "slot": "openLink"
+                    },
+                    "source": {
+                        "memberIdRef": "buttons",
+                        "slot": "selected"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": true
+                },
+                {
+                    "connectionId": "buttons-connection-data",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "buttons",
+                        "slot": "data"
+                    },
+                    "source": {
+                        "memberIdRef": "data-helper",
+                        "slot": "dataOutput"
+                    },
+                    "hookFunction": "pcp_cockpit_determine_buttons_content",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "toConcatSlideItem1-a",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "concatSlideItem1",
+                        "slot": "a"
+                    },
+                    "source": {
+                        "memberIdRef": "slideItemBaseprice",
+                        "slot": "item"
+                    },
+                    "hookFunction": "function(value,next){next([value])}",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "toConcatSlideItem1-b",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "concatSlideItem1",
+                        "slot": "b"
+                    },
+                    "source": {
+                        "memberIdRef": "slideItemWorkprice",
+                        "slot": "item"
+                    },
+                    "hookFunction": "function(value,next){next([value])}",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "toConcatSlideItemsForInfoSlider-b",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "concatSlideItemsForInfoSlider",
+                        "slot": "b"
+                    },
+                    "source": {
+                        "memberIdRef": "concatSlideItem1",
+                        "slot": "output"
+                    },
+                    "hookFunction": "function(value,next){next([value])}",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "toInfoSlider",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "info-slider",
+                        "slot": "slides"
+                    },
+                    "source": {
+                        "memberIdRef": "concatSlideItemsForInfoSlider",
+                        "slot": "output"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "con-toSelectedMedium",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "selectedMedium",
+                        "slot": "selectedMedium"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedMedium"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "tabsSelectionYears",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "tabs",
+                        "slot": "tabs"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectionYears"
+                    },
+                    "hookFunction": "mapYearsToTabsArray",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "tabsSelectedYear",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "tabs",
+                        "slot": "selected"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedYear"
+                    },
+                    "hookFunction": "function(value,next) {next('' + value);}",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "gauge-connection-highest",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "gauge",
+                        "slot": "highest"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedPeriod"
+                    },
+                    "hookFunction": "mapGaugeHighest",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "gauge-connection-lowest",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "gauge",
+                        "slot": "lowest"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedPeriod"
+                    },
+                    "hookFunction": "mapGaugeLowest",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "gauge-connection-current",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "gauge",
+                        "slot": "current"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedPeriod"
+                    },
+                    "hookFunction": "function(value,next){next((undefined === value.current) ? value.lastSettlementBasePrice : value.currentBasePrice);}",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "gauge-connection-title",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "gauge",
+                        "slot": "title"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedMedium"
+                    },
+                    "hookFunction": "gaugeGenerateTitle",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "gauge-connection-link-medium",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "gauge",
+                        "slot": "link"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedMedium"
+                    },
+                    "hookFunction": "pcp_cockpit_determine_link",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "gauge-connection-link",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "gauge",
+                        "slot": "link"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedYear"
+                    },
+                    "hookFunction": "pcp_cockpit_determine_link",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "energyBar-ticks",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "energyBar",
+                        "slot": "ticks"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "energyBarTicks"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "energyBar-coveredQuantityPercentage",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "energyBar",
+                        "slot": "percentage"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "coveredQuantityPercentage"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "slide1-baseprice",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "slideItemBaseprice",
+                        "slot": "subheading"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedPriceRecord"
+                    },
+                    "hookFunction": "function(value,next){next(formatNumber(value.basePriceYear) + ' €');}",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "slide1-workprice",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "slideItemWorkprice",
+                        "slot": "subheading"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "workprice"
+                    },
+                    "hookFunction": "function(value,next){next(formatNumber(value) + ' ct/kWh');}",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "con-selectedYearToDataProvider",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "data-provider",
+                        "slot": "selectedYear"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedYear"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "con-selectedMediumToDataProvider",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "data-provider",
+                        "slot": "selectedMedium"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "selectedMedium"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "toSlideItemSavingToCurrrentPrice",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "slideItemSavingToCurrentPrice1",
+                        "slot": "subheading"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "savingToCurrentPrice"
+                    },
+                    "hookFunction": "function (value, next) {\n        next(value + ' €');\n    }",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "toSlideItemSavingToHistoricalMinPrice",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "slideItemSavingToHistoricalMinPrice1",
+                        "slot": "subheading"
+                    },
+                    "source": {
+                        "memberIdRef": "pageController",
+                        "slot": "savingToHistoricalMinPrice"
+                    },
+                    "hookFunction": "function (value, next) {\n        next(value + ' €');\n    }",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "toConcatItemOneAndTwo-a",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "concatItemOneAndTwo",
+                        "slot": "a"
+                    },
+                    "source": {
+                        "memberIdRef": "slideItemSavingToHistoricalMinPrice1",
+                        "slot": "item"
+                    },
+                    "hookFunction": "function (value, next) {\n        next([value]);\n    }",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "toConcatItemOneAndTwo-b",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "concatItemOneAndTwo",
+                        "slot": "b"
+                    },
+                    "source": {
+                        "memberIdRef": "slideItemSavingToCurrentPrice1",
+                        "slot": "item"
+                    },
+                    "hookFunction": "function (value, next) {\n        next([value]);\n    }",
+                    "repeatedValues": false
+                },
+                {
+                    "connectionId": "concatSlideItemsForInfoSlider-a",
+                    "copyValue": true,
+                    "destination": {
+                        "memberIdRef": "concatSlideItemsForInfoSlider",
+                        "slot": "a"
+                    },
+                    "source": {
+                        "memberIdRef": "concatItemOneAndTwo",
+                        "slot": "output"
+                    },
+                    "hookFunction": null,
+                    "repeatedValues": false
+                }
+            ]
+        };
+        document.addEventListener('cifReady', function () {
+            genericViewer.setViewerHeight(window.innerHeight * 0.7 + 'px');
+            genericViewer.setDefinitions(definitions);
+        });
+    })()
+</script>
+</body>
+</html>

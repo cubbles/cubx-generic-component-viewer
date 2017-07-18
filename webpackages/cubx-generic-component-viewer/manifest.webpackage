@@ -36,6 +36,11 @@
             "description": "Demo app..."
           },
           {
+            "name": "Complex demo",
+            "path": "/demo/complexDemo.html",
+            "description": "Complex demo app..."
+          },
+          {
             "name": "docs",
             "path": "/docs/index.html",
             "description": "Show the interface of this component."
