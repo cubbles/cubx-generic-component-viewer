@@ -3,14 +3,20 @@
 
     <template>
         <style include="cubx-generic-component-viewer-style"></style>
-        <div class="col-md-10">
+        <div>
             <h2 id="component_view_holder_title">{{model.viewerTitle}}</h2>
         </div>
-        <div id="saveDiagramBDiv">
-            <button class="btn btn-default" id="saveDiagramB" on-click="_saveAsSvg">
-                <i class="glyphicon glyphicon-save"></i>
-                <span>Save diagram</span>
-            </button>
+        <div class="btn-toolbar">
+            <div class="btn-group pull-right">
+                <button class="btn btn-default" id="saveDiagramB" on-click="_saveAsSvg">
+                    <i class="glyphicon glyphicon-save"></i>
+                    <span>Save diagram</span>
+                </button>
+                <button class="btn btn-default" id="zoomToFitB" on-click="_zoomToFit">
+                    <i class="glyphicon glyphicon-fit-image-to-frame"></i>
+                    <span>Zoom to fit</span>
+                </button>
+            </div>
         </div>
         <div id="component_view_holder"></div>
     </template>

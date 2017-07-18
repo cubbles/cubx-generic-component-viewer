@@ -136,15 +136,14 @@
       if (!scale) {
         return false;
       } else if (scale === 'auto' || scale === 'none') {
-		  return true;
-	  }
-      else {
-		  var scaleAsFloat = -1;
+        return true;
+      } else {
+        var scaleAsFloat = -1;
         scaleAsFloat = parseFloat(scale);
         if (isNaN(scaleAsFloat)) {
           return false;
         }
-		return scaleAsFloat > 0;
+        return scaleAsFloat > 0;
       }
     },
 
@@ -952,6 +951,14 @@
       if (fontObject.weight) fontString += fontObject.weight + ' ';
       if (fontObject.style) fontString += fontObject.style + ' ';
       return fontString;
+    },
+
+    /**
+     * Zoom and center the diagram to fit within container
+     * @private
+     */
+    _zoomToFit: function () {
+      this._autoScaleAndCenterDiagram(this.svg, this.g);
     },
 
     /**
