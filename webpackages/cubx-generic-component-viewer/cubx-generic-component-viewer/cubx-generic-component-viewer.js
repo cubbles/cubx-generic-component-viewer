@@ -878,30 +878,27 @@
         .attr('d', 'M0,-5L10,0L0,5');
 
       // Add connections arrows
-      var connectionView = connectionData.enter()
+      var connectionGroup = connectionData.enter()
+        .append('g')
+        .on('mouseover', function (d) {
+          self._highlightConnection(d3.select(this).selectAll('path'));
+        })
+        .on('mouseout', function (d) {
+          self._undoHighlightConnection(d3.select(this).selectAll('path'), d);
+        })
+        .on('click', function (d) {
+          handleConnectionClick(d3.select(this).selectAll('path'), d);
+        });
+      var connectionView = connectionGroup
         .append('path')
         .attr('id', function (d) {
           return d.id;
         })
         .attr('class', 'connectionView ' + self.is)
         .attr('d', 'M0 0')
-        .attr('marker-end', 'url(#end)')
-        .on('mouseover', function (d) {
-          self._highlightConnection(d3.select(this));
-        })
-        .on('mouseout', function (d) {
-          self._undoHighlightConnection(d3.select(this), d);
-        })
-        .on('click', function (d) {
-          d.highlighted = !d.highlighted;
-          if (d.highlighted) {
-            self._highlightConnection(d3.select(this));
-          } else {
-            self._undoHighlightConnection(d3.select(this), d);
-          }
-        });
+        .attr('marker-end', 'url(#end)');
 
-      var connectionViewLabel = connectionData.enter()
+      var connectionViewLabel = connectionGroup
         .append('text')
         .attr('class', 'connectionViewLabel ' + self.is)
         .text(function (d) {
@@ -925,7 +922,8 @@
           var x = d.labels[0].x + self._maxRootInputSlotWidth + self.CONNECTION_LABEL_MARGIN;
           var y = d.labels[0].y + d.labels[0].height * 2.5;
           return 'translate(' + x + ' ' + y + ')';
-        });
+        })
+      ;
 
       connectionViewLabel.filter(function (d) {
         return d.hookFunction;
@@ -943,6 +941,15 @@
         path += 'L' + (d.targetPoint.x - self.SLOT_RADIUS) + ' ' + d.targetPoint.y + ' ';
         return path;
       });
+
+      function handleConnectionClick (d3select, d) {
+        d.highlighted = !d.highlighted;
+        if (d.highlighted) {
+          self._highlightConnection(d3select);
+        } else {
+          self._undoHighlightConnection(d3select, d);
+        }
+      }
     },
 
     /**
