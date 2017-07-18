@@ -90,7 +90,8 @@
             "description": "Height of the component viewer (e.g. 100%, 100px, 100em).",
             "direction": [
               "input"
-            ]
+            ],
+            "value": "100%"
           },
           {
             "slotId": "viewerTitle",
