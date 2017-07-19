@@ -845,12 +845,22 @@
         });
     },
 
+    /** Highlight a connection given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired connection
+     * @private
+     */
     _highlightConnection: function (d3select) {
       d3select.classed('highlighted', true);
     },
 
-    _undoHighlightConnection: function (d3select, d) {
-      if (!d.highlighted) {
+    /**
+     * Remove the highlighting of a connection given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired connection
+     * @param {object} data - Data associated to the connection
+     * @private
+     */
+    _undoHighlightConnection: function (d3select, data) {
+      if (!data.highlighted) {
         d3select.classed('highlighted', false);
       }
     },
