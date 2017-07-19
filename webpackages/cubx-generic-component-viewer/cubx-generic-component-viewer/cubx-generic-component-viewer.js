@@ -69,6 +69,7 @@
      */
     cubxReady: function () {
       this._cubxReady = true;
+      this._disconnectedSlotsHidden = false;
     },
 
     /**
@@ -657,6 +658,9 @@
 
         self._drawMembers(componentsData);
         self._drawConnections(connectionsData);
+        if (d3.selectAll('.disconnected')[0].length > 0) {
+          self.$$('#hideDisconnectedB').style.display = 'block';
+        }
         self.status = 'ready';
       });
       layouter.kgraph(componentGraph);
@@ -795,7 +799,7 @@
         .attr('id', function (d) {
           return d.id;
         })
-        .attr('class', 'slotView ' + self.is);
+        .attr('class', 'slotView disconnected ' + self.is);
 
       slotView.append('circle')
         .attr('class', 'slotViewAtom ' + self.is)
@@ -902,6 +906,9 @@
       var connectionView = connectionGroup
         .append('path')
         .attr('id', function (d) {
+          // Remove disconnected class to source and target slots
+          d3.select('#' + d.sourcePort).classed('disconnected', false);
+          d3.select('#' + d.targetPort).classed('disconnected', false);
           return d.id;
         })
         .attr('class', 'connectionView ' + self.is)
@@ -1024,6 +1031,21 @@
 
       var blob = new Blob([source], {type: 'image/svg+xml'});
       saveAs(blob, this._component.artifactId + '.svg');
+    },
+
+    _hideShowDisconnectedSlots: function (e) {
+      if (this._disconnectedSlotsHidden) {
+        d3.selectAll('.disconnected').style('display', 'block');
+        e.currentTarget.querySelector('i').classList.remove('glyphicon-eye-open');
+        e.currentTarget.querySelector('i').classList.add('glyphicon-eye-close');
+        e.currentTarget.querySelector('span').innerHTML = 'Hide disconnected slots';
+      } else {
+        d3.selectAll('.disconnected').style('display', 'none');
+        e.currentTarget.querySelector('i').classList.remove('glyphicon-eye-close');
+        e.currentTarget.querySelector('i').classList.add('glyphicon-eye-open');
+        e.currentTarget.querySelector('span').innerHTML = 'Show disconnected slots';
+      }
+      this._disconnectedSlotsHidden = !this._disconnectedSlotsHidden;
     },
 
     /**
