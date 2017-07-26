@@ -659,7 +659,8 @@
         self._drawMembers(componentsData);
         self._drawConnections(connectionsData);
         if (d3.selectAll('.disconnected')[0].length > 0) {
-          self.$$('#hideDisconnectedB').style.display = 'block';
+          self.$$('#hideDisconnectedB').style.display = 'inline';
+          self.$$('#hideDisconnectedB').removeAttribute('disabled');
         }
         self.status = 'ready';
       });
