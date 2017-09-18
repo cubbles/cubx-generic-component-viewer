@@ -64,14 +64,14 @@
             ],
             connections: [
                 {
-                    'connectionId': 'htmlToMd',
+                    'connectionId': 'htmlToMdThisConnectionIdIsLongerThanFiftyCharacters',
                     'copyValue': true,
                     'destination': {'memberIdRef': 'mdViewer', 'slot': 'markdown'},
                     'source': {'memberIdRef': 'genericMapper', 'slot': 'mappedString'},
                     'hookFunction': 'sampleFunction'
                 },
                 {
-                    'connectionId': 'content',
+                    'connectionId': 'contentConnection',
                     'copyValue': true,
                     'destination': {'memberIdRef': 'genericMapper', 'slot': 'inputString'},
                     'source': {'memberIdRef': 'ckeditor', 'slot': 'dataAfterChange'},

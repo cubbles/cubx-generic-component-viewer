@@ -445,15 +445,31 @@
       }
       return {
         id: compoundConnection.connectionId,
-        labels: [this._createLabel(compoundConnection.connectionId, this.CONNECTION_LABEL_FONT, '')],
+        labels: [this._createLabel(determineConnectionIdLabel(compoundConnection.connectionId),
+          this.CONNECTION_LABEL_FONT, '')],
         source: source,
         sourcePort: sourcePort,
         target: target,
         targetPort: targetPort,
         hookFunction: compoundConnection.hookFunction || '',
-        tooltipHTML: ('<strong>Hook function:</strong><p>' + compoundConnection.hookFunction + '</p>') || '',
+        tooltipHTML: determineToolTip(compoundConnection),
         highlighted: false
       };
+
+      function determineConnectionIdLabel (connectionId) {
+        return connectionId.length > 50 ? connectionId.slice(0, 50) + '...' : connectionId;
+      }
+
+      function determineToolTip (compoundConnection) {
+        var html = '';
+        if (compoundConnection.connectionId.length > 50) {
+          html += '<strong>Connection Id:</strong><p>' + compoundConnection.connectionId + '</p>';
+        }
+        if (compoundConnection.hookFunction) {
+          html += '<strong>Hook function:</strong><p>' + compoundConnection.hookFunction + '</p>';
+        }
+        return html;
+      }
     },
 
     /**
@@ -920,13 +936,13 @@
         .append('text')
         .attr('class', 'connectionViewLabel ' + self.is)
         .text(function (d) {
-          return d.labels[0].text + (d.hookFunction ? '\t🛈' : '') || '';
+          return d.labels[0].text + (d.tooltipHTML ? '\t🛈' : '') || '';
         })
         .attr('font-size', function (d) {
           return d.labels[0].fontObject.size;
         })
         .attr('font-weight', function (d) {
-          return d.hookFunction ? 'bold' : d.labels[0].fontObject.weight;
+          return d.tooltipHTML ? 'bold' : d.labels[0].fontObject.weight;
         })
         .attr('font-style', function (d) {
           return d.labels[0].fontObject.style;
@@ -944,7 +960,7 @@
       ;
 
       connectionViewLabel.filter(function (d) {
-        return d.hookFunction;
+        return d.tooltipHTML;
       })
         .on('mouseover', self.infoToolTip.show)
         .on('mouseout', self.infoToolTip.hide);
