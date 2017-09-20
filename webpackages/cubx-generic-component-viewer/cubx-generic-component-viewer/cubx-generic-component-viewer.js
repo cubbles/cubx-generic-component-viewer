@@ -916,7 +916,7 @@
      * @param {object} data - Data associated to the element
      * @private
      */
-    _undoGrayOutElement: function (d3select, data) {
+    _undoGrayOutElement: function (d3select) {
       d3select.classed('grayed-out', false);
     },
 
@@ -945,6 +945,13 @@
       // Add connections arrows
       var connectionGroup = connectionData.enter()
         .append('g')
+        .attr('class', self.is)
+        .attr('data-source-member-id', function (d) {
+          return d.source;
+        })
+        .attr('data-destination-member-id', function (d) {
+          return d.target;
+        })
         .on('mouseover', function (d) {
           self._highlightElement(d3.select(this).selectAll('path'));
         })
@@ -1143,10 +1150,16 @@
       return styles;
     },
 
+    /**
+     * Determine the list of memberIds of the members, which are not connected to the member
+     * identified by 'memberId'
+     * @param {string} memberId - MemberId of the reference component
+     * @returns {Array}
+     * @private
+     */
     _getNonConnectedMembersIds: function (memberId) {
       var nonConnectedMembersIds = [];
       var connectedMembersIds = this._getConnectedMembersIds(memberId);
-      console.log(connectedMembersIds);
       this.getDefinitions().members.forEach(function (member) {
         if (member.memberId !== memberId && connectedMembersIds.indexOf(member.memberId) === -1) {
           nonConnectedMembersIds.push(member.memberId);
@@ -1155,6 +1168,13 @@
       return nonConnectedMembersIds;
     },
 
+    /**
+     * Determine the list of memberIds of the members, which are connected to the member
+     * identified by 'memberId'
+     * @param {string} memberId - MemberId of the reference component
+     * @returns {Array}
+     * @private
+     */
     _getConnectedMembersIds: function (memberId) {
       var connectedMembersIds = [];
       this.getDefinitions().connections.forEach(function (connection) {
@@ -1176,9 +1196,11 @@
         this._highlightElement(member);
         var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
         nonConnectedMembersIds.forEach(function (memberId) {
-          var nonConnectedMembers = d3.select('#' + memberId);
-          if (nonConnectedMembers) {
-            this._grayOutElement(nonConnectedMembers);
+          var nonConnectedMember = d3.select('#' + memberId);
+          if (nonConnectedMember) {
+            this._grayOutElement(nonConnectedMember);
+            this._grayOutElement(d3.selectAll('[data-destination-member-id="' + memberId + '"]'));
+            this._grayOutElement(d3.selectAll('[data-source-member-id="' + memberId + '"]'));
           }
         }.bind(this));
       }
