@@ -4,15 +4,15 @@
         Get help: https://www.polymer-project.org/1.0/docs/devguide/styling.html#xscope-styling-details
         -->
         <style>
-            #component_view_holder{
+            #component_view_holder {
                 border: solid 1px #ddd;
             }
 
-            rect.componentViewAtom.member.cubx-generic-component-viewer{
+            rect.componentViewAtom.member.cubx-generic-component-viewer {
                 fill: #e7e7e7;
             }
 
-            #component_view_holder_title{
+            #component_view_holder_title {
                 display: none;
             }
 
@@ -49,12 +49,13 @@
                 stroke-width: 1;
                 fill: #fff;
             }
-            .slotViewLabel, .connectionViewLabel{
+
+            .slotViewLabel, .connectionViewLabel {
                 fill: #000;
                 stroke: none;
             }
 
-            .info_tooltip{
+            .info_tooltip {
                 background: #fff;
                 box-shadow: 0 0 5px #999999;
                 color: #333;
@@ -65,15 +66,22 @@
                 word-wrap: break-word;
                 z-index: 1060;
             }
-            .btn-toolbar{
+
+            .btn-toolbar {
                 padding-top: 1em;
                 padding-bottom: 1em;
             }
-            .highlighted{
+
+            .highlighted {
                 stroke-width:3px;
                 stroke: #00ff38;
                 stroke-opacity: 0.8;
             }
+
+            .grayed-out {
+                opacity: 0.3;
+            }
+
             #hideDisconnectedB {
                 display: none;
             }

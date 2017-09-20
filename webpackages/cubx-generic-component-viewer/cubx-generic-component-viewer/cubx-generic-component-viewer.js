@@ -107,6 +107,15 @@
     },
 
     /**
+     *  Observe the Cubbles-Component-Model: If value for slot 'highlightedMember' has changed ...
+     */
+    modelHighlightedMemberChanged: function (highlightedMemberId) {
+      if (this.status === 'ready') {
+        this._highlightMember(highlightedMemberId);
+      }
+    },
+
+    /**
      * Process a scale value to then scale the diagram correctly
      * @param {string} scale - Scale to be applied
      * @private
@@ -678,6 +687,9 @@
           self.$$('#hideDisconnectedB').style.display = 'inline';
           self.$$('#hideDisconnectedB').removeAttribute('disabled');
         }
+        if (self.getHighlightedMember()) {
+          self._highlightMember(self.getHighlightedMember());
+        }
         self.status = 'ready';
       });
       layouter.kgraph(componentGraph);
@@ -696,24 +708,28 @@
           return d.id;
         })
         .attr('class', function (d) {
+          var classList = '';
           if (d.children) {
-            return 'componentView root ' + self.is;
+            classList += 'componentView root ';
           } else {
-            return 'componentView member ' + self.is;
+            classList += 'componentView member ';
           }
+          classList += self.is;
+          return classList;
         });
 
       var atoms = componentView.append('rect')
         .attr('class', function (d) {
+          var classList = '';
           if (d.id !== 'root') {
             if (d.children) {
-              return 'componentViewAtom root ' + self.is;
+              classList += 'componentViewAtom root ';
             } else {
-              return 'componentViewAtom member ' + self.is;
+              classList += 'componentViewAtom member ';
             }
-          } else {
-            return '';
           }
+          classList += self.is;
+          return classList;
         });
 
       var headingAtom = componentView.append('g')
@@ -866,24 +882,42 @@
         });
     },
 
-    /** Highlight a connection given by the 'd3select'
-     * @param {object} d3select - D3 selection of the desired connection
+    /** Highlight a element given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired element
      * @private
      */
-    _highlightConnection: function (d3select) {
+    _highlightElement: function (d3select) {
       d3select.classed('highlighted', true);
     },
 
     /**
-     * Remove the highlighting of a connection given by the 'd3select'
-     * @param {object} d3select - D3 selection of the desired connection
-     * @param {object} data - Data associated to the connection
+     * Remove the highlighting of an element given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired element
+     * @param {object} data - Data associated to the element
      * @private
      */
-    _undoHighlightConnection: function (d3select, data) {
+    _undoHighlightElement: function (d3select, data) {
       if (!data.highlighted) {
         d3select.classed('highlighted', false);
       }
+    },
+
+    /** Gray an element out given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired element
+     * @private
+     */
+    _grayOutElement: function (d3select) {
+      d3select.classed('grayed-out', true);
+    },
+
+    /**
+     * Remove the graying out of an element given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired element
+     * @param {object} data - Data associated to the element
+     * @private
+     */
+    _undoGrayOutElement: function (d3select, data) {
+      d3select.classed('grayed-out', false);
     },
 
     /**
@@ -912,10 +946,10 @@
       var connectionGroup = connectionData.enter()
         .append('g')
         .on('mouseover', function (d) {
-          self._highlightConnection(d3.select(this).selectAll('path'));
+          self._highlightElement(d3.select(this).selectAll('path'));
         })
         .on('mouseout', function (d) {
-          self._undoHighlightConnection(d3.select(this).selectAll('path'), d);
+          self._undoHighlightElement(d3.select(this).selectAll('path'), d);
         })
         .on('click', function (d) {
           handleConnectionClick(d3.select(this).selectAll('path'), d);
@@ -979,9 +1013,9 @@
       function handleConnectionClick (d3select, d) {
         d.highlighted = !d.highlighted;
         if (d.highlighted) {
-          self._highlightConnection(d3select);
+          self._highlightElement(d3select);
         } else {
-          self._undoHighlightConnection(d3select, d);
+          self._undoHighlightElement(d3select, d);
         }
       }
     },
@@ -1050,6 +1084,11 @@
       saveAs(blob, this._component.artifactId + '.svg');
     },
 
+    /**
+     * Hide or show the disconnected slots
+     * @param e
+     * @private
+     */
     _hideShowDisconnectedSlots: function (e) {
       if (this._disconnectedSlotsHidden) {
         d3.selectAll('.disconnected').style('display', 'block');
@@ -1102,6 +1141,47 @@
         }
       }
       return styles;
+    },
+
+    _getNonConnectedMembersIds: function (memberId) {
+      var nonConnectedMembersIds = [];
+      var connectedMembersIds = this._getConnectedMembersIds(memberId);
+      console.log(connectedMembersIds);
+      this.getDefinitions().members.forEach(function (member) {
+        if (member.memberId !== memberId && connectedMembersIds.indexOf(member.memberId) === -1) {
+          nonConnectedMembersIds.push(member.memberId);
+        }
+      });
+      return nonConnectedMembersIds;
+    },
+
+    _getConnectedMembersIds: function (memberId) {
+      var connectedMembersIds = [];
+      this.getDefinitions().connections.forEach(function (connection) {
+        if (connection.source.memberIdRef && connection.source.memberIdRef === memberId) {
+          connectedMembersIds.push(connection.destination.memberIdRef);
+        }
+      });
+      return connectedMembersIds;
+    },
+
+    /**
+     * Highlight a member and gray unconnected members out
+     * @param {string} memberId - MemberId of the element to be highlighted
+     * @private
+     */
+    _highlightMember: function (memberId) {
+      var member = d3.select('#' + memberId + ' rect');
+      if (member) {
+        this._highlightElement(member);
+        var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
+        nonConnectedMembersIds.forEach(function (memberId) {
+          var nonConnectedMembers = d3.select('#' + memberId);
+          if (nonConnectedMembers) {
+            this._grayOutElement(nonConnectedMembers);
+          }
+        }.bind(this));
+      }
     }
   });
 }());

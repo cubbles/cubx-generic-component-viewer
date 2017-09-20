@@ -123,6 +123,14 @@
             "direction": [
               "input"
             ]
+          },
+          {
+            "slotId": "highlightedMember",
+            "type": "string",
+            "description": "The memberId of the member to be highlighted in the dataflow view.",
+            "direction": [
+              "input"
+            ]
           }
         ]
       }

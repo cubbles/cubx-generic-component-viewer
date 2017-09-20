@@ -82,6 +82,7 @@
         };
         document.addEventListener('cifReady', function () {
             genericViewer.setViewerHeight(window.innerHeight * 0.7 + 'px');
+            genericViewer.setHighlightedMember('genericMapper');
             genericViewer.setDefinitions(definitions);
         });
     })()
