@@ -718,6 +718,13 @@
           }
           classList += self.is;
           return classList;
+        })
+        .on('click', function (d) {
+          if (d.children) {
+            self._resetHighlightingAndGrayOut();
+          } else {
+            self._highlightMember(d.id);
+          }
         });
 
       var atoms = componentView.append('rect')
@@ -1157,8 +1164,7 @@
     _highlightMember: function (memberId) {
       var member = d3.select('#' + memberId + ' rect');
       if (member) {
-        this._undoGrayOutAllElements();
-        this._undoHighlightAllElements();
+        this._resetHighlightingAndGrayOut();
         this._highlightElement(member);
         var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
         nonConnectedMembersIds.forEach(function (memberId) {
@@ -1223,6 +1229,15 @@
      */
     _undoHighlightAllElements: function () {
       d3.selectAll('.' + this.HIGHLIGHTED_CSS_CLASS).classed(this.HIGHLIGHTED_CSS_CLASS, false);
+    },
+
+    /**
+     * Undo highlighting and gary out of members in the dataflow view
+     * @private
+     */
+    _resetHighlightingAndGrayOut: function () {
+      this._undoHighlightAllElements();
+      this._undoGrayOutAllElements();
     }
   });
 }());
