@@ -38,6 +38,8 @@
     MEMBER_LABEL_PLACEMENT: 'V_TOP H_CENTER',
     MEMBER_PORT_ALIGNMENT: 'BEGIN',
     AD_HOC_COMPONENT: {artifactId: 'ad-hoc-component', slots: [], webpackageId: ''},
+    HIGHLIGHTED_CSS_CLASS: 'highlighted',
+    GRAYED_OUT_CSS_CLASS: 'grayed-out',
 
     /**
      * Manipulate an element’s local DOM when the element is created.
@@ -882,44 +884,6 @@
         });
     },
 
-    /** Highlight a element given by the 'd3select'
-     * @param {object} d3select - D3 selection of the desired element
-     * @private
-     */
-    _highlightElement: function (d3select) {
-      d3select.classed('highlighted', true);
-    },
-
-    /**
-     * Remove the highlighting of an element given by the 'd3select'
-     * @param {object} d3select - D3 selection of the desired element
-     * @param {object} data - Data associated to the element
-     * @private
-     */
-    _undoHighlightElement: function (d3select, data) {
-      if (!data.highlighted) {
-        d3select.classed('highlighted', false);
-      }
-    },
-
-    /** Gray an element out given by the 'd3select'
-     * @param {object} d3select - D3 selection of the desired element
-     * @private
-     */
-    _grayOutElement: function (d3select) {
-      d3select.classed('grayed-out', true);
-    },
-
-    /**
-     * Remove the graying out of an element given by the 'd3select'
-     * @param {object} d3select - D3 selection of the desired element
-     * @param {object} data - Data associated to the element
-     * @private
-     */
-    _undoGrayOutElement: function (d3select) {
-      d3select.classed('grayed-out', false);
-    },
-
     /**
      * Draw the connections and their ids as labels
      * @param {Object} connectionData - Data of each connection (D3)
@@ -1193,6 +1157,8 @@
     _highlightMember: function (memberId) {
       var member = d3.select('#' + memberId + ' rect');
       if (member) {
+        this._undoGrayOutAllElements();
+        this._undoHighlightAllElements();
         this._highlightElement(member);
         var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
         nonConnectedMembersIds.forEach(function (memberId) {
@@ -1204,6 +1170,59 @@
           }
         }.bind(this));
       }
+    },
+
+    /** Highlight a element given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired element
+     * @private
+     */
+    _highlightElement: function (d3select) {
+      d3select.classed(this.HIGHLIGHTED_CSS_CLASS, true);
+    },
+
+    /**
+     * Remove the highlighting of an element given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired element
+     * @param {object} data - Data associated to the element
+     * @private
+     */
+    _undoHighlightElement: function (d3select, data) {
+      if (!data.highlighted) {
+        d3select.classed(this.HIGHLIGHTED_CSS_CLASS, false);
+      }
+    },
+
+    /** Gray an element out given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired element
+     * @private
+     */
+    _grayOutElement: function (d3select) {
+      d3select.classed(this.GRAYED_OUT_CSS_CLASS, true);
+    },
+
+    /**
+     * Remove the graying out of an element given by the 'd3select'
+     * @param {object} d3select - D3 selection of the desired element
+     * @private
+     */
+    _undoGrayOutElement: function (d3select) {
+      d3select.classed(this.GRAYED_OUT_CSS_CLASS, false);
+    },
+
+    /**
+     * Remove the graying out of all grayed out elements
+     * @private
+     */
+    _undoGrayOutAllElements: function () {
+      d3.selectAll('.' + this.GRAYED_OUT_CSS_CLASS).classed(this.GRAYED_OUT_CSS_CLASS, false);
+    },
+
+    /**
+     * Remove the highlighting of all highlighted elements
+     * @private
+     */
+    _undoHighlightAllElements: function () {
+      d3.selectAll('.' + this.HIGHLIGHTED_CSS_CLASS).classed(this.HIGHLIGHTED_CSS_CLASS, false);
     }
   });
 }());
