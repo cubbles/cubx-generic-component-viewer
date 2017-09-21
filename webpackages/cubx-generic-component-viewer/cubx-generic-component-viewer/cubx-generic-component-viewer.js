@@ -916,7 +916,7 @@
       // Add connections arrows
       var connectionGroup = connectionData.enter()
         .append('g')
-        .attr('class', self.is)
+        .attr('class', 'connectionView group ' + self.is)
         .attr('data-source-member-id', function (d) {
           return d.source;
         })
