@@ -1163,7 +1163,7 @@
      */
     _highlightMember: function (memberId) {
       var member = d3.select('#' + memberId + ' rect');
-      if (member) {
+      if (!member.empty()) {
         this._resetHighlightingAndGrayOut();
         this._highlightElement(member);
         var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
