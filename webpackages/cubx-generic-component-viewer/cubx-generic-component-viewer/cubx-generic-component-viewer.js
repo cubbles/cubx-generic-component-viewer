@@ -1162,13 +1162,14 @@
      * @private
      */
     _highlightMember: function (memberId) {
-      var member = d3.select('#' + memberId + ' rect');
-      if (!member.empty()) {
-        this._resetHighlightingAndGrayOut();
-        this._highlightElement(member);
+      this._resetHighlightingAndGrayOut();
+      // normal # selector doesn't work for id starting with a number (i.e. for dynamic generated member ids)
+      var memberBorder = d3.select('[id="' + memberId + '"] rect');
+      if (!memberBorder.empty()) {
+        this._highlightElement(memberBorder);
         var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
         nonConnectedMembersIds.forEach(function (memberId) {
-          var nonConnectedMember = d3.select('#' + memberId);
+          var nonConnectedMember = d3.select('[id="' + memberId + '"]');
           if (nonConnectedMember) {
             this._grayOutElement(nonConnectedMember);
             this._grayOutElement(d3.selectAll('[data-destination-member-id="' + memberId + '"]'));
