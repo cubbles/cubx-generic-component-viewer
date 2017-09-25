@@ -720,6 +720,9 @@
           return classList;
         })
         .on('click', function (d) {
+          if (d3.event.defaultPrevented) {
+            return;
+          }
           if (d.children) {
             self._resetHighlightingAndGrayOut();
           } else {
