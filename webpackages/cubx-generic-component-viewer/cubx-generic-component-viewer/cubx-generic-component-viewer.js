@@ -40,6 +40,9 @@
     AD_HOC_COMPONENT: {artifactId: 'ad-hoc-component', slots: [], webpackageId: ''},
     HIGHLIGHTED_CSS_CLASS: 'highlighted',
     GRAYED_OUT_CSS_CLASS: 'grayed-out',
+    MINIMAP_ID: 'minimap',
+    MINIMAP_SCALE: 0.5,
+    INITIAL_MINIMAP_ZOOM_SCALE: 0.1,
 
     /**
      * Manipulate an element’s local DOM when the element is created.
@@ -1242,6 +1245,76 @@
     _resetHighlightingAndGrayOut: function () {
       this._undoHighlightAllElements();
       this._undoGrayOutAllElements();
+    },
+
+    _generateMinimap: function () {
+      var graphDimensions = {
+        width: this.g.node().getBBox().width,
+        height: this.g.node().getBBox().height
+      };
+      var viewerDimensions = {
+        width: this.$$('#' + this.VIEW_HOLDER_ID).clientWidth,
+        height: this.$$('#' + this.VIEW_HOLDER_ID).clientHeight
+      };
+      var minimapDivDimensions = {
+        width: graphDimensions.width * this.MINIMAP_SCALE,
+        height: graphDimensions.height * this.MINIMAP_SCALE
+      };
+      var minimapDiv = this.$$('#' + this.MINIMAP_ID);
+      var clonedSvg = this.$$('#' + this.VIEW_HOLDER_ID + ' svg').cloneNode(true);
+      clonedSvg.removeAttribute('id');
+      var svg = d3.select(clonedSvg);
+      var g = svg.select('g');
+      this._scaleDiagram(svg, g, this.MINIMAP_SCALE);
+      minimapDiv.style.height = getScaleInPixels(graphDimensions.height, this.MINIMAP_SCALE);
+      minimapDiv.style.width = getScaleInPixels(graphDimensions.width, this.MINIMAP_SCALE);
+      minimapDiv.appendChild(clonedSvg);
+      this.setScale(5);
+
+      var self = this;
+
+      var drag = d3.behavior.drag()
+        .on('drag', function () {
+          var x0 = d3.transform(d3.select(this).attr('transform')).translate[0];
+          var y0 = d3.transform(d3.select(this).attr('transform')).translate[1];
+          var x = Math.max(0, Math.min(x0 + d3.event.dx, minimapDivDimensions.width - minimapDivDimensions.width * self.INITIAL_MINIMAP_ZOOM_SCALE));
+          var y = Math.max(0, Math.min(y0 + d3.event.dy, minimapDivDimensions.height - minimapDivDimensions.height * self.INITIAL_MINIMAP_ZOOM_SCALE));
+          d3.select(this).attr('transform', function (d, i) {
+            return 'translate(' + [ x, y ] + ')';
+          });
+
+          self._applyTransform(
+            d3.select('#' + self.VIEW_HOLDER_ID + ' svg'),
+            d3.select('#' + self.VIEW_HOLDER_ID + ' svg g'),
+            {
+              x: -x / (self.INITIAL_MINIMAP_ZOOM_SCALE),
+              y: -y / (self.INITIAL_MINIMAP_ZOOM_SCALE),
+              scale: 5
+            });
+        });
+
+      d3.select(minimapDiv)
+        .append('svg')
+        .attr('class', 'frame-container ' + this.is)
+        .style('height', function () {
+          return getScaleInPixels(minimapDivDimensions.height, 1);
+        })
+        .style('width', function () {
+          return getScaleInPixels(minimapDivDimensions.width, 1);
+        })
+        .append('rect')
+        .attr('class', 'frame ' + this.is)
+        .style('height', function () {
+          return getScaleInPixels(viewerDimensions.height, this.INITIAL_MINIMAP_ZOOM_SCALE);
+        }.bind(this))
+        .style('width', function () {
+          return getScaleInPixels(viewerDimensions.width, this.INITIAL_MINIMAP_ZOOM_SCALE);
+        }.bind(this))
+        .call(drag);
+
+      function getScaleInPixels (initialValue, scale) {
+        return initialValue * scale + 'px';
+      }
     }
   });
 }());
