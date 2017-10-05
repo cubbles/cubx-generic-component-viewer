@@ -237,7 +237,7 @@
         this.getDefinitions().members.forEach(addMemberToGraph.bind(this));
       }
 
-      function addMemberToGraph (member) {
+      function addMemberToGraph(member) {
         var componentDefOfMember = this._getComponentDefOfMember(member);
         graphMembers.push(this._generateGraphMember(componentDefOfMember, member));
       }
@@ -469,11 +469,11 @@
         highlighted: false
       };
 
-      function determineConnectionIdLabel (connectionId) {
+      function determineConnectionIdLabel(connectionId) {
         return connectionId.length > 50 ? connectionId.slice(0, 50) + '...' : connectionId;
       }
 
-      function determineToolTip (compoundConnection) {
+      function determineToolTip(compoundConnection) {
         var html = '';
         if (compoundConnection.connectionId.length > 50) {
           html += '<strong>Connection Id:</strong><p>' + compoundConnection.connectionId + '</p>';
@@ -625,12 +625,28 @@
     _setReflectedZoomBehavior: function (diagram, reflectedDiagram) {
       diagram.svg.zoom = d3.behavior.zoom()
         .on('zoom', function () {
-          diagram.element.attr('transform', 'translate(' + d3.event.translate + ')' + ' scale(' + d3.event.scale + ')');
+          var maxCoordinates = getMaxCoordinates(diagram.svg, diagram.element);
+          var x = Math.max(0, Math.min(d3.event.translate[0], maxCoordinates.x));
+          var y = Math.max(0, Math.min(d3.event.translate[1], maxCoordinates.y));
+          diagram.element.attr(
+            'transform', 'translate(' + [x, y] + ')' + ' scale(' + d3.event.scale + ')'
+          );
           if (reflectedDiagram.element) {
-            var x = -d3.event.translate[0] / (reflectedDiagram.scale * d3.event.scale);
-            var y = -d3.event.translate[1] / (reflectedDiagram.scale * d3.event.scale);
+            var rx = -x / (reflectedDiagram.scale * d3.event.scale);
+            var ry = -y / (reflectedDiagram.scale * d3.event.scale);
             var fScale = 1 / d3.event.scale;
-            reflectedDiagram.element.attr('transform', 'translate(' + x + ',' + y + ')' + ' scale(' + fScale + ')');
+            reflectedDiagram.element.attr(
+              'transform', 'translate(' + [rx, ry] + ')' + ' scale(' + fScale + ')'
+            );
+          }
+
+          function getMaxCoordinates (svg, element) {
+            var svgBoundRect = svg.node().getBoundingClientRect();
+            var elementBoundRect = element.node().getBoundingClientRect();
+            return {
+              x: svgBoundRect.width - elementBoundRect.width,
+              y: svgBoundRect.height - elementBoundRect.height
+            };
           }
         });
       if (diagram.scaleExtent) {
@@ -804,7 +820,11 @@
         .each('end', function (d) {
           if (d.id === 'root') {
             self._setReflectedZoomBehavior(
-              {svg: self.svg, element: self.g, scaleExtent: [self._calculateAutoScale(self.svg, self.g), Infinity]},
+              {
+                svg: self.svg,
+                element: self.g,
+                scaleExtent: [self._calculateAutoScale(self.svg, self.g), Infinity]
+              },
               {element: self.minimapFrame, scale: 1 / self.MINIMAP_SCALE}
             );
             self._generateMinimap();
@@ -1014,7 +1034,7 @@
         return path;
       });
 
-      function handleConnectionClick (d3select, d) {
+      function handleConnectionClick(d3select, d) {
         d.highlighted = !d.highlighted;
         if (d.highlighted) {
           self._highlightElement(d3select);
@@ -1268,16 +1288,17 @@
     },
 
     _generateMinimap: function () {
+      var viewer = this.$$('#' + this.VIEW_HOLDER_ID);
       var viewerDimensions = {
-        width: this.$$('#' + this.VIEW_HOLDER_ID).clientWidth,
-        height: this.$$('#' + this.VIEW_HOLDER_ID).clientHeight
+        width: viewer.clientWidth,
+        height: viewer.clientHeight
       };
       var minimapSize = {
         width: viewerDimensions.width * this.MINIMAP_SCALE,
         height: viewerDimensions.height * this.MINIMAP_SCALE
       };
       var minimapDiv = this.$$('#' + this.MINIMAP_ID);
-      var clonedSvg = this.$$('#' + this.VIEW_HOLDER_ID + ' svg').cloneNode(true);
+      var clonedSvg = viewer.querySelector('svg').cloneNode(true);
       clonedSvg.removeAttribute('id');
       var svg = d3.select(clonedSvg);
       var g = svg.select('g');
@@ -1311,7 +1332,7 @@
         {svg: this.minimapSvg, element: this.minimapFrame, scaleExtent: [0, 1]},
         {element: this.g, scale: this.MINIMAP_SCALE}
       );
-      function getScaleInPixels (initialValue, scale) {
+      function getScaleInPixels(initialValue, scale) {
         return initialValue * scale + 'px';
       }
     }
