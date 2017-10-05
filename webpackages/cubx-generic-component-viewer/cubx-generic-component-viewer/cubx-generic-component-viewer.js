@@ -41,8 +41,7 @@
     HIGHLIGHTED_CSS_CLASS: 'highlighted',
     GRAYED_OUT_CSS_CLASS: 'grayed-out',
     MINIMAP_ID: 'minimap',
-    MINIMAP_SCALE: 0.5,
-    INITIAL_MINIMAP_ZOOM_SCALE: 0.1,
+    MINIMAP_SCALE: 0.3,
 
     /**
      * Manipulate an element’s local DOM when the element is created.
@@ -528,9 +527,9 @@
      * @param {Element} g - Svg group to be centered into the 'svg' element
      * @private
      */
-    _centerDiagram: function (svg, g) {
+    _centerDiagram: function (svg, g, scale) {
       if (svg.node().parentNode.clientWidth > 0 && svg.node().parentNode.clientHeight > 0) {
-        this._applyTransform(svg, g, this._calculateCenterCoordinates(svg, g));
+        this._applyTransform(svg, g, this._calculateCenterCoordinates(svg, g, scale));
       }
     },
 
@@ -599,36 +598,52 @@
      */
     _updateZoom: function (svg, g, transform) {
       if ('x' in transform && 'y' in transform) {
-        this.zoom.translate([transform.x, transform.y]);
+        svg.zoom.translate([transform.x, transform.y]);
       }
       if ('scale' in transform) {
-        this.zoom.scale(transform.scale);
+        svg.zoom.scale(transform.scale);
       }
-      svg.call(this.zoom);
+      svg.call(svg.zoom);
     },
 
     /**
      * Add zoom behavior to the viewer based on the given initial transform, if any.
-     * @param {Element} svg - Svg element containing 'g'
-     * @param {Element} g - Svg group within the 'svg' element
-     * @param {object} [initialTransform] - Object containing initial coordinates and scale of the
-     * viewer, i.e. {x: x, y: y, scale: z}
+     * @param {object} diagram - Object containing the info of the diagram getting the zoom behavior
+     * @param {Element} diagram.svg - Svg element containing the diagram
+     * @param {Element} diagram.element - Element representing the diagram
+     * @param {Element} [diagram.scaleExtent] - Array containing the min und max possible scale
+     * @param {Element} [diagram.initialTransform] - Object containing initial transform to be
+     * applied to the diagram.element, i.e. {x: initialX, y: initialY, scale: initialScale}
+     * @param {object} [reflectedDiagram] - Object containing the info of a diagram which should
+     * reflect the zoomBehavior
+     * @param {Element} [reflectedDiagram.element] - Element containing the reflected diagram
+     * @param {Element} [reflectedDiagram.scale] - Scale of the reflectedDiagram in respect to
+     * diagram
      * @private
      */
-    _setZoomBehavior: function (svg, g, initialTransform) {
-      this.zoom = d3.behavior.zoom()
+    _setReflectedZoomBehavior: function (diagram, reflectedDiagram) {
+      diagram.svg.zoom = d3.behavior.zoom()
         .on('zoom', function () {
-          g.attr('transform', 'translate(' + d3.event.translate + ')' + ' scale(' + d3.event.scale + ')');
+          diagram.element.attr('transform', 'translate(' + d3.event.translate + ')' + ' scale(' + d3.event.scale + ')');
+          if (reflectedDiagram.element) {
+            var x = -d3.event.translate[0] / (reflectedDiagram.scale * d3.event.scale);
+            var y = -d3.event.translate[1] / (reflectedDiagram.scale * d3.event.scale);
+            var fScale = 1 / d3.event.scale;
+            reflectedDiagram.element.attr('transform', 'translate(' + x + ',' + y + ')' + ' scale(' + fScale + ')');
+          }
         });
-      if (initialTransform) {
-        if ('x' in initialTransform && 'y' in initialTransform) {
-          this.zoom.translate([initialTransform.x, initialTransform.y]);
+      if (diagram.scaleExtent) {
+        diagram.svg.zoom.scaleExtent(diagram.scaleExtent);
+      }
+      if (diagram.initialTransform) {
+        if ('x' in diagram.initialTransform && 'y' in diagram.initialTransform) {
+          diagram.svg.zoom.translate([diagram.initialTransform.x, diagram.initialTransform.y]);
         }
-        if ('scale' in initialTransform) {
-          this.zoom.scale(initialTransform.scale);
+        if ('scale' in diagram.initialTransform) {
+          diagram.svg.zoom.scale(diagram.initialTransform.scale);
         }
       }
-      svg.call(this.zoom);
+      diagram.svg.call(diagram.svg.zoom);
     },
 
     /**
@@ -644,8 +659,9 @@
         .append('svg')
         .attr('width', '100%')
         .attr('height', '100%');
-      var realWidth = $('#' + this.VIEW_HOLDER_ID).width();
-      var realHeight = $('#' + this.VIEW_HOLDER_ID).height();
+      var viewHolder = $('#' + this.VIEW_HOLDER_ID);
+      var realWidth = viewHolder.width();
+      var realHeight = viewHolder.height();
       this.g = this.svg.append('g');
       var root = this.g.append('g');
       var layouter = klay.d3kgraph()
@@ -659,8 +675,6 @@
           crossMin: 'LAYER_SWEEP',
           algorithm: 'de.cau.cs.kieler.klay.layered'
         });
-
-      this._setZoomBehavior(this.svg, this.g);
 
       // Tooltip
       this.infoToolTip = d3.tip()
@@ -788,6 +802,9 @@
         })
         .each('end', function (d) {
           if (d.id === 'root') {
+            self._setReflectedZoomBehavior(self.svg, self.g, null, self.minimapRect, self.MINIMAP_SCALE * 10,
+              [self._calculateAutoScale(self.svg, self.g), Infinity]);
+            self._generateMinimap();
             self._centerDiagram(self.svg, self.g);
           }
         });
@@ -1248,70 +1265,46 @@
     },
 
     _generateMinimap: function () {
-      var graphDimensions = {
-        width: this.g.node().getBBox().width,
-        height: this.g.node().getBBox().height
-      };
       var viewerDimensions = {
         width: this.$$('#' + this.VIEW_HOLDER_ID).clientWidth,
         height: this.$$('#' + this.VIEW_HOLDER_ID).clientHeight
       };
-      var minimapDivDimensions = {
-        width: graphDimensions.width * this.MINIMAP_SCALE,
-        height: graphDimensions.height * this.MINIMAP_SCALE
+      var minimapSize = {
+        width: viewerDimensions.width * this.MINIMAP_SCALE,
+        height: viewerDimensions.height * this.MINIMAP_SCALE
       };
       var minimapDiv = this.$$('#' + this.MINIMAP_ID);
       var clonedSvg = this.$$('#' + this.VIEW_HOLDER_ID + ' svg').cloneNode(true);
       clonedSvg.removeAttribute('id');
       var svg = d3.select(clonedSvg);
       var g = svg.select('g');
-      this._scaleDiagram(svg, g, this.MINIMAP_SCALE);
-      minimapDiv.style.height = getScaleInPixels(graphDimensions.height, this.MINIMAP_SCALE);
-      minimapDiv.style.width = getScaleInPixels(graphDimensions.width, this.MINIMAP_SCALE);
+      svg.zoom = this.svg.zoom;
+      minimapDiv.style.height = getScaleInPixels(minimapSize.height, 1);
+      minimapDiv.style.width = getScaleInPixels(minimapSize.width, 1);
       minimapDiv.appendChild(clonedSvg);
-      this.setScale(5);
+      // this._autoScaleAndCenterDiagram(svg, g);
+      this._scaleDiagram(svg, g, this.MINIMAP_SCALE);
 
       var self = this;
-
-      var drag = d3.behavior.drag()
-        .on('drag', function () {
-          var x0 = d3.transform(d3.select(this).attr('transform')).translate[0];
-          var y0 = d3.transform(d3.select(this).attr('transform')).translate[1];
-          var x = Math.max(0, Math.min(x0 + d3.event.dx, minimapDivDimensions.width - minimapDivDimensions.width * self.INITIAL_MINIMAP_ZOOM_SCALE));
-          var y = Math.max(0, Math.min(y0 + d3.event.dy, minimapDivDimensions.height - minimapDivDimensions.height * self.INITIAL_MINIMAP_ZOOM_SCALE));
-          d3.select(this).attr('transform', function (d, i) {
-            return 'translate(' + [ x, y ] + ')';
-          });
-
-          self._applyTransform(
-            d3.select('#' + self.VIEW_HOLDER_ID + ' svg'),
-            d3.select('#' + self.VIEW_HOLDER_ID + ' svg g'),
-            {
-              x: -x / (self.INITIAL_MINIMAP_ZOOM_SCALE),
-              y: -y / (self.INITIAL_MINIMAP_ZOOM_SCALE),
-              scale: 5
-            });
-        });
-
-      d3.select(minimapDiv)
+      this.minimapSvg = d3.select(minimapDiv)
         .append('svg')
-        .attr('class', 'frame-container ' + this.is)
+        .attr('class', 'frame-container ' + self.is)
         .style('height', function () {
-          return getScaleInPixels(minimapDivDimensions.height, 1);
+          return getScaleInPixels(minimapSize.height, 1);
         })
         .style('width', function () {
-          return getScaleInPixels(minimapDivDimensions.width, 1);
-        })
-        .append('rect')
+          return getScaleInPixels(minimapSize.width, 1);
+        });
+      this.minimapRect = this.minimapSvg.append('rect')
         .attr('class', 'frame ' + this.is)
         .style('height', function () {
-          return getScaleInPixels(viewerDimensions.height, this.INITIAL_MINIMAP_ZOOM_SCALE);
-        }.bind(this))
+          return getScaleInPixels(minimapSize.height, 1);
+        })
         .style('width', function () {
-          return getScaleInPixels(viewerDimensions.width, this.INITIAL_MINIMAP_ZOOM_SCALE);
-        }.bind(this))
-        .call(drag);
+          return getScaleInPixels(minimapSize.width, 1);
+        });
 
+      this._setReflectedZoomBehavior(this.minimapSvg, this.minimapRect, null, this.g, this.MINIMAP_SCALE, [0, 1]);
       function getScaleInPixels (initialValue, scale) {
         return initialValue * scale + 'px';
       }
