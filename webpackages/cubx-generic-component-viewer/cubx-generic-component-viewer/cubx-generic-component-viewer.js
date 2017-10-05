@@ -609,15 +609,16 @@
     /**
      * Add zoom behavior to the viewer based on the given initial transform, if any.
      * @param {object} diagram - Object containing the info of the diagram getting the zoom behavior
-     * @param {Element} diagram.svg - Svg element containing the diagram
-     * @param {Element} diagram.element - Element representing the diagram
-     * @param {Element} [diagram.scaleExtent] - Array containing the min und max possible scale
-     * @param {Element} [diagram.initialTransform] - Object containing initial transform to be
+     * @param {object} diagram.svg - D3 selection of svg element containing the diagram
+     * @param {object} diagram.element - D3 selection of the element representing the diagram
+     * @param {Array} [diagram.scaleExtent] - Array containing the min und max possible scale
+     * @param {object} [diagram.initialTransform] - Object containing initial transform to be
      * applied to the diagram.element, i.e. {x: initialX, y: initialY, scale: initialScale}
      * @param {object} [reflectedDiagram] - Object containing the info of a diagram which should
      * reflect the zoomBehavior
-     * @param {Element} [reflectedDiagram.element] - Element containing the reflected diagram
-     * @param {Element} [reflectedDiagram.scale] - Scale of the reflectedDiagram in respect to
+     * @param {object} [reflectedDiagram.element] - d3 selection of the element containing the
+     * reflected diagram
+     * @param {number} [reflectedDiagram.scale] - Scale of the reflectedDiagram in respect to
      * diagram
      * @private
      */
@@ -802,8 +803,10 @@
         })
         .each('end', function (d) {
           if (d.id === 'root') {
-            self._setReflectedZoomBehavior(self.svg, self.g, null, self.minimapRect, self.MINIMAP_SCALE * 10,
-              [self._calculateAutoScale(self.svg, self.g), Infinity]);
+            self._setReflectedZoomBehavior(
+              {svg: self.svg, element: self.g, scaleExtent: [self._calculateAutoScale(self.svg, self.g), Infinity]},
+              {element: self.minimapFrame, scale: 1 / self.MINIMAP_SCALE}
+            );
             self._generateMinimap();
             self._centerDiagram(self.svg, self.g);
           }
@@ -1295,7 +1298,7 @@
         .style('width', function () {
           return getScaleInPixels(minimapSize.width, 1);
         });
-      this.minimapRect = this.minimapSvg.append('rect')
+      this.minimapFrame = this.minimapSvg.append('rect')
         .attr('class', 'frame ' + this.is)
         .style('height', function () {
           return getScaleInPixels(minimapSize.height, 1);
@@ -1304,7 +1307,10 @@
           return getScaleInPixels(minimapSize.width, 1);
         });
 
-      this._setReflectedZoomBehavior(this.minimapSvg, this.minimapRect, null, this.g, this.MINIMAP_SCALE, [0, 1]);
+      this._setReflectedZoomBehavior(
+        {svg: this.minimapSvg, element: this.minimapFrame, scaleExtent: [0, 1]},
+        {element: this.g, scale: this.MINIMAP_SCALE}
+      );
       function getScaleInPixels (initialValue, scale) {
         return initialValue * scale + 'px';
       }
