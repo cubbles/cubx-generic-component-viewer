@@ -41,7 +41,7 @@
     HIGHLIGHTED_CSS_CLASS: 'highlighted',
     GRAYED_OUT_CSS_CLASS: 'grayed-out',
     MINIMAP_ID: 'minimap',
-    MINIMAP_SCALE: 0.6,
+    MINIMAP_SCALE: 0.3,
 
     /**
      * Manipulate an element’s local DOM when the element is created.
@@ -652,7 +652,7 @@
             if (reflectedDiagram.element.initialPosition) {
               rx += reflectedDiagram.element.initialPosition.x / d3.event.scale;
               ry += reflectedDiagram.element.initialPosition.y / d3.event.scale;
-            };
+            }
             var fScale = 1 / d3.event.scale;
             reflectedDiagram.element.attr(
               'transform', 'translate(' + [rx, ry] + ')' + ' scale(' + fScale + ')'
@@ -1314,10 +1314,7 @@
 
     _generateMinimap: function () {
       var viewer = this.$$('#' + this.VIEW_HOLDER_ID);
-      var viewerDimensions = {
-        width: viewer.clientWidth,
-        height: viewer.clientHeight
-      };
+      var viewerDimensions = viewer.getBoundingClientRect();
       var minimapSize = {
         width: viewerDimensions.width * this.MINIMAP_SCALE,
         height: viewerDimensions.height * this.MINIMAP_SCALE
@@ -1330,9 +1327,10 @@
       this._setReflectedZoomBehavior({svg: svg, element: g});
       minimapDiv.style.height = getScaleInPixels(minimapSize.height, 1);
       minimapDiv.style.width = getScaleInPixels(minimapSize.width, 1);
-      minimapDiv.appendChild(clonedSvg);
-      this._autoScaleAndCenterDiagram(svg, g);
-      // this._scaleDiagram(svg, g, this.MINIMAP_SCALE);
+      setTimeout(function () {
+        minimapDiv.appendChild(clonedSvg);
+        this._autoScaleAndCenterDiagram(svg, g);
+      }.bind(this), 1000);
 
       var self = this;
       this.minimapSvg = d3.select(minimapDiv)
