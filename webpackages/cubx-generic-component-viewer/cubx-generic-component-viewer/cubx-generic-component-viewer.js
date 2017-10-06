@@ -237,7 +237,7 @@
         this.getDefinitions().members.forEach(addMemberToGraph.bind(this));
       }
 
-      function addMemberToGraph(member) {
+      function addMemberToGraph (member) {
         var componentDefOfMember = this._getComponentDefOfMember(member);
         graphMembers.push(this._generateGraphMember(componentDefOfMember, member));
       }
@@ -469,11 +469,11 @@
         highlighted: false
       };
 
-      function determineConnectionIdLabel(connectionId) {
+      function determineConnectionIdLabel (connectionId) {
         return connectionId.length > 50 ? connectionId.slice(0, 50) + '...' : connectionId;
       }
 
-      function determineToolTip(compoundConnection) {
+      function determineToolTip (compoundConnection) {
         var html = '';
         if (compoundConnection.connectionId.length > 50) {
           html += '<strong>Connection Id:</strong><p>' + compoundConnection.connectionId + '</p>';
@@ -494,7 +494,7 @@
      * @private
      */
     _scaleDiagram: function (svg, g, scale) {
-      this._applyTransform(svg, g, {scale: scale});
+      this._applyTransformWithTransition(svg, g, {scale: scale});
     },
 
     /**
@@ -529,7 +529,7 @@
      */
     _centerDiagram: function (svg, g, scale) {
       if (svg.node().parentNode.clientWidth > 0 && svg.node().parentNode.clientHeight > 0) {
-        this._applyTransform(svg, g, this._calculateCenterCoordinates(svg, g, scale));
+        this._applyTransformWithTransition(svg, g, this._calculateCenterCoordinates(svg, g, scale));
       }
     },
 
@@ -543,29 +543,38 @@
       var scale = this._calculateAutoScale(svg, g);
       var transform = this._calculateCenterCoordinates(svg, g, scale);
       transform.scale = scale;
-      this._applyTransform(svg, g, transform);
+      this._applyTransformWithTransition(svg, g, transform);
     },
 
     /**
-     * Apply a transform to 'g', which can be a translation, a scale or both. The updates the zoom
-     * behavior according to the applied transform.
+     * Apply a transformInfo to 'g', which can be a translation, a scale or both. The updates the zoom
+     * behavior according to the applied transformInfo.
      * @param {Element} svg - Svg element containing 'g'
-     * @param {Element} g - Svg group to be transformed
-     * @param {object} transform - Object containing current coordinates and scale of the viewer,
+     * @param {Element} element - Svg group to be transformed
+     * @param {object} transformInfo - Object containing current coordinates and scale of the viewer,
      * e.g: {x: 0, y: 10, scale: 0.5}
      * @private
      */
-    _applyTransform: function (svg, g, transform) {
+    _applyTransformWithTransition: function (svg, element, transformInfo) {
+      element.transition()
+        .attr('transform', this._generateTransformString(transformInfo));
+      this._updateZoom(svg, element, transformInfo);
+    },
+
+    _applyTransform: function (svg, element, transformInfo) {
+      element.attr('transform', this._generateTransformString(transformInfo));
+      this._updateZoom(svg, element, transformInfo);
+    },
+
+    _generateTransformString: function (transformInfo) {
       var transformString = '';
-      if ('x' in transform && 'y' in transform) {
-        transformString += 'translate(' + transform.x + ',' + transform.y + ') ';
+      if ('x' in transformInfo && 'y' in transformInfo) {
+        transformString += 'translate(' + transformInfo.x + ',' + transformInfo.y + ') ';
       }
-      if ('scale' in transform) {
-        transformString += 'scale(' + transform.scale + ')';
+      if ('scale' in transformInfo) {
+        transformString += 'scale(' + transformInfo.scale + ')';
       }
-      g.transition()
-        .attr('transform', transformString);
-      this._updateZoom(svg, g, transform);
+      return transformString;
     },
 
     /**
@@ -614,6 +623,8 @@
      * @param {Array} [diagram.scaleExtent] - Array containing the min und max possible scale
      * @param {object} [diagram.initialTransform] - Object containing initial transform to be
      * applied to the diagram.element, i.e. {x: initialX, y: initialY, scale: initialScale}
+     * @param {boolean} [diagram.restrictedDragging] - Indicates whether the element can be drag
+     * only within the available svg space
      * @param {object} [reflectedDiagram] - Object containing the info of a diagram which should
      * reflect the zoomBehavior
      * @param {object} [reflectedDiagram.element] - d3 selection of the element containing the
@@ -626,8 +637,12 @@
       diagram.svg.zoom = d3.behavior.zoom()
         .on('zoom', function () {
           var maxCoordinates = getMaxCoordinates(diagram.svg, diagram.element);
-          var x = Math.max(0, Math.min(d3.event.translate[0], maxCoordinates.x));
-          var y = Math.max(0, Math.min(d3.event.translate[1], maxCoordinates.y));
+          var x = d3.event.translate[0];
+          var y = d3.event.translate[1];
+          if (diagram.restrictedDragging) {
+            x = Math.max(0, Math.min(x, maxCoordinates.x));
+            y = Math.max(0, Math.min(y, maxCoordinates.y));
+          }
           diagram.element.attr(
             'transform', 'translate(' + [x, y] + ')' + ' scale(' + d3.event.scale + ')'
           );
@@ -638,8 +653,9 @@
             reflectedDiagram.element.attr(
               'transform', 'translate(' + [rx, ry] + ')' + ' scale(' + fScale + ')'
             );
+            reflectedDiagram.svg.zoom.translate([rx, ry]);
+            reflectedDiagram.svg.zoom.scale(fScale);
           }
-
           function getMaxCoordinates (svg, element) {
             var svgBoundRect = svg.node().getBoundingClientRect();
             var elementBoundRect = element.node().getBoundingClientRect();
@@ -819,15 +835,19 @@
         })
         .each('end', function (d) {
           if (d.id === 'root') {
+            self._generateMinimap();
             self._setReflectedZoomBehavior(
               {
                 svg: self.svg,
                 element: self.g,
                 scaleExtent: [self._calculateAutoScale(self.svg, self.g), Infinity]
               },
-              {element: self.minimapFrame, scale: 1 / self.MINIMAP_SCALE}
+              {
+                svg: self.minimapSvg,
+                element: self.minimapFrame,
+                scale: 1 / self.MINIMAP_SCALE
+              }
             );
-            self._generateMinimap();
             self._centerDiagram(self.svg, self.g);
           }
         });
@@ -1034,7 +1054,7 @@
         return path;
       });
 
-      function handleConnectionClick(d3select, d) {
+      function handleConnectionClick (d3select, d) {
         d.highlighted = !d.highlighted;
         if (d.highlighted) {
           self._highlightElement(d3select);
@@ -1302,7 +1322,7 @@
       clonedSvg.removeAttribute('id');
       var svg = d3.select(clonedSvg);
       var g = svg.select('g');
-      svg.zoom = this.svg.zoom;
+      this._setReflectedZoomBehavior({svg: svg, element: g});
       minimapDiv.style.height = getScaleInPixels(minimapSize.height, 1);
       minimapDiv.style.width = getScaleInPixels(minimapSize.width, 1);
       minimapDiv.appendChild(clonedSvg);
@@ -1329,10 +1349,15 @@
         });
 
       this._setReflectedZoomBehavior(
-        {svg: this.minimapSvg, element: this.minimapFrame, scaleExtent: [0, 1]},
-        {element: this.g, scale: this.MINIMAP_SCALE}
+        {
+          svg: this.minimapSvg,
+          element: this.minimapFrame,
+          scaleExtent: [0, 1],
+          restrictedDragging: true
+        },
+        {svg: this.svg, element: this.g, scale: this.MINIMAP_SCALE}
       );
-      function getScaleInPixels(initialValue, scale) {
+      function getScaleInPixels (initialValue, scale) {
         return initialValue * scale + 'px';
       }
     }
