@@ -14,13 +14,15 @@
     is: 'cubx-generic-component-viewer',
 
     _cubxReady: false,
-    _maxRootInputSlotWidth: 0,
+    _maxRootComponentSlotWidth: 0,
     HEADER_MARGIN: 10,
     ROOT_COMPONENT_NAME_FONT: {size: 16, family: 'arial'},
     MEMBER_COMPONENT_NAME_FONT: {size: 12, family: 'arial'},
     MEMBER_ID_NAME_FONT: {size: 16, family: 'arial', weight: 'bold'},
-    COMPOUND_TITLE: 'Dataflow view',
-    ELEMENTARY_TITLE: 'Interface view',
+    DEFAULT_TITLE: {
+      whenIsCompound: 'Dataflow view',
+      whenIsElementary: 'Interface view'
+    },
     VIEW_HOLDER_ID: 'component_view_holder',
     SLOT_LABELS_SPACE: 40,
     SLOT_LABEL_FONT: {size: 12, family: 'arial'},
@@ -42,6 +44,12 @@
     GRAYED_OUT_CSS_CLASS: 'grayed-out',
     MINIMAP_ID: 'minimap',
     MINIMAP_SCALE: 0.3,
+    DEFAULT_VIEWER_STYLE: {
+      heightProportion: 0.7,
+      overflow: 'hidden',
+      resize: 'vertical',
+      width: '100%'
+    },
 
     /**
      * Manipulate an element’s local DOM when the element is created.
@@ -60,12 +68,7 @@
      * Manipulate an element’s local DOM when the element is attached to the document.
      */
     attached: function () {
-      var viewHolder = this.$$('#' + this.VIEW_HOLDER_ID);
-      viewHolder.id = this.VIEW_HOLDER_ID;
-      viewHolder.style.width = this.getViewerWidth();
-      viewHolder.style.height = this.getViewerHeight() || this.parentNode.clientHeight * 0.7 + 'px';
-      viewHolder.style.overflow = 'hidden';
-      viewHolder.style.resize = 'vertical';
+      this._setInitialStyleToViewHolder();
     },
 
     /**
@@ -80,25 +83,21 @@
      *  Observe the Cubbles-Component-Model: If value for slot 'viewerWidth' has changed ...
      */
     modelViewerWidthChanged: function (viewerWidth) {
-      this.$$('#' + this.VIEW_HOLDER_ID).style.width = viewerWidth;
+      this._setViewHolderWidth(viewerWidth);
     },
 
     /**
      *  Observe the Cubbles-Component-Model: If value for slot 'viewerHeight' has changed ...
      */
     modelViewerHeightChanged: function (viewerHeight) {
-      if (viewerHeight.indexOf('%') !== -1) {
-        var proportion = parseInt(viewerHeight.substring(0, viewerHeight.indexOf('%'))) / 100;
-        viewerHeight = this.parentNode.clientHeight * proportion + 'px';
-      }
-      this.$$('#' + this.VIEW_HOLDER_ID).style.height = viewerHeight;
+      this._setViewHolderHeight(viewerHeight);
     },
 
     /**
      *  Observe the Cubbles-Component-Model: If value for slot 'scale' has changed ...
      */
     modelScaleChanged: function (scale) {
-      if (this.status === 'ready') {
+      if (this._viewerIsReady()) {
         this._processScale(scale);
       }
     },
@@ -114,9 +113,31 @@
      *  Observe the Cubbles-Component-Model: If value for slot 'highlightedMember' has changed ...
      */
     modelHighlightedMemberChanged: function (highlightedMemberId) {
-      if (this.status === 'ready') {
+      if (this._viewerIsReady()) {
         this._highlightMember(highlightedMemberId);
       }
+    },
+
+    _setInitialStyleToViewHolder: function () {
+      this._setViewHolderWidth(this.getViewerWidth() || this.DEFAULT_VIEWER_STYLE.width);
+      this._setViewHolderHeight(this.getViewerHeight() || this._getDefaultViewerHeight());
+      this._getViewHolder().style.overflow = this.DEFAULT_VIEWER_STYLE.overflow;
+      this._getViewHolder().style.resize = this.DEFAULT_VIEWER_STYLE.resize;
+    },
+
+    _getDefaultViewerHeight: function () {
+      return this._getProportionOfNumberInPixels(
+        this.parentNode.clientHeight,
+        this.this.DEFAULT_VIEWER_STYLE.heightProportion
+      );
+    },
+
+    _getProportionOfNumberInPixels: function (number, proportion) {
+      return this._getProportionOfNumber(number, proportion) + 'px';
+    },
+
+    _getProportionOfNumber: function (number, proportion) {
+      return number * proportion;
     },
 
     /**
@@ -141,7 +162,6 @@
     },
 
     /**
-     * Indicate whether the given 'scale' is valid
      * @param {string} scale - Scale to be validated
      * @returns {boolean} True if scale is valid, otherwise false
      * @private
@@ -152,13 +172,31 @@
       } else if (scale === 'auto' || scale === 'none') {
         return true;
       } else {
-        var scaleAsFloat = -1;
-        scaleAsFloat = parseFloat(scale);
-        if (isNaN(scaleAsFloat)) {
-          return false;
-        }
-        return scaleAsFloat > 0;
+        return (isNaN(parseFloat(scale)));
       }
+    },
+
+    _setViewHolderWidth: function (viewerWidth) {
+      this._getViewHolder().style.width = viewerWidth;
+    },
+
+    _setViewHolderHeight: function (viewerHeight) {
+      if (viewerHeight.indexOf('%') !== -1) {
+        var proportion = parseInt(viewerHeight.substring(0, viewerHeight.indexOf('%'))) / 100;
+        viewerHeight = this._getProportionOfNumberInPixels(this.parentNode.clientHeight, proportion);
+      }
+      this._getViewHolder().style.height = viewerHeight;
+    },
+
+    _viewerIsReady: function () {
+      return this.status === 'ready';
+    },
+
+    _getViewHolder: function () {
+      if (!this._viewHolder) {
+        this._viewHolder = this.$$('#' + this.VIEW_HOLDER_ID);
+      }
+      return this._viewHolder;
     },
 
     /**
@@ -177,19 +215,30 @@
       } else {
         this._component = this.AD_HOC_COMPONENT;
       }
-      this._updateView();
+      this._resetViewer();
     },
 
     /**
      * Update the viewer title and displayed component
      * @private
      */
-    _updateView: function () {
-      this._maxRootInputSlotWidth = 0;
+    _resetViewer: function () {
+      this._resetMaxRootComponentSlotWidth();
+      this._updateViewerTitle();
+      this._drawComponent(this._generateComponentGraph());
+    },
+
+    _resetMaxRootComponentSlotWidth: function () {
+      this._maxRootComponentSlotWidth = 0;
+    },
+
+    _updateViewerTitle: function () {
       if (this.getShowTitle()) {
+        if (!this.getViewerTitle()) {
+          this.setViewerTitle(this._getDefaultViewerTitle());
+        }
         this._displayPageTitle();
       }
-      this._generateAndDrawComponentGraph();
     },
 
     /**
@@ -197,12 +246,19 @@
      * @private
      */
     _displayPageTitle: function () {
-      $('#' + this.VIEW_HOLDER_ID + '_title').css('display', 'inline-block');
-      if (this.getDefinitions().members && !this.getViewerTitle()) {
-        this.setViewerTitle(this.COMPOUND_TITLE);
+      this.$$('#' + this.VIEW_HOLDER_ID + '_title').style.display = 'inline-block';
+    },
+
+    _getDefaultViewerTitle: function () {
+      if (this._rootComponentIsCompound()) {
+        return (this.DEFAULT_TITLE.whenIsCompound);
       } else {
-        this.setViewerTitle(this.ELEMENTARY_TITLE);
+        return (this.DEFAULT_TITLE.whenIsElementary);
       }
+    },
+
+    _rootComponentIsCompound: function () {
+      return this.getDefinitions().hasOwnProperty('members');
     },
 
     /**
@@ -210,20 +266,24 @@
      * also be an ad-hoc component)
      * @private
      */
-    _generateAndDrawComponentGraph: function () {
+    _generateComponentGraph: function () {
       var componentGraph = {id: 'root', children: []};
+      componentGraph.children.push(this._generateRootComponent());
+      componentGraph.edges = this._generateGraphConnections(
+        this.getDefinitions().connections || [],
+        this.getDefinitions().componentArtifactId || ''
+      );
+      return componentGraph;
+    },
+
+    _generateRootComponent: function () {
       var rootComponent = this._generateGraphMember(
         this._component,
         undefined,
         this.ROOT_COMPONENT_CONFIG
       );
       rootComponent.children = this._generateGraphMembers();
-      componentGraph.children.push(rootComponent);
-      componentGraph.edges = this._generateGraphConnections(
-        this.getDefinitions().connections || [],
-        this.getDefinitions().componentArtifactId || ''
-      );
-      this._drawComponent(componentGraph);
+      return rootComponent;
     },
 
     /**
@@ -252,15 +312,22 @@
      * @private
      */
     _getComponentDefOfMember: function (member) {
-      var componentArtifactId = member.componentId
-        ? member.componentId.substr(member.componentId.indexOf('/') + 1)
-        : member.artifactId;
+      return this._getDefinitionOfComponent(this._getComponentArtifactIdOfMember(member));
+    },
+
+    _getDefinitionOfComponent: function (componentArtifactId) {
       if (this.getDefinitions().components.hasOwnProperty(componentArtifactId)) {
         return this.getDefinitions().components[componentArtifactId];
       } else {
         console.error('The component definition of the member with artifactId: \'' +
           componentArtifactId + '\' was not found in definitions.');
       }
+    },
+
+    _getComponentArtifactIdOfMember: function (member) {
+      return member.componentId
+        ? member.componentId.substr(member.componentId.indexOf('/') + 1)
+        : member.artifactId;
     },
 
     /**
@@ -283,23 +350,43 @@
       return {
         id: memberId || component.artifactId,
         labels: header.labels,
-        width: Math.max(graphMemberSlots.slotsWidth + this.SLOT_LABELS_SPACE, header.width),
-        height: graphMemberSlots.slotsHeight + header.height,
+        width: calculateWidthOfMember(this.SLOT_LABELS_SPACE),
+        height: calculateHeightOfMember(),
         ports: graphMemberSlots.slots,
         headerHeight: header.height,
         properties: {
           portConstraints: this.MEMBER_PORT_CONSTRAINTS,
-          portLabelPlacement: optionals && optionals.portLabelPlacement
-            ? optionals.portLabelPlacement
-            : this.MEMBER_PORT_LABEL_PLACEMENT,
+          portLabelPlacement: determinePortLabelPlacement(this.MEMBER_PORT_LABEL_PLACEMENT),
           nodeLabelPlacement: this.MEMBER_LABEL_PLACEMENT,
           portAlignment: this.MEMBER_PORT_ALIGNMENT,
           portSpacing: this.SLOT_SPACE,
-          additionalPortSpace: 'top=' + (header.height + this.SLOTS_AREA_MARGIN * 1.5) +
-          ', bottom=' + this.SLOTS_AREA_MARGIN + ',left=0,right=0',
-          borderSpacing: optionals && optionals.borderSpacing ? optionals.borderSpacing : 0
+          additionalPortSpace: calculateAdditionalPortSpace(this.SLOTS_AREA_MARGIN),
+          borderSpacing: determineBorderSpacing()
         }
       };
+
+      function calculateWidthOfMember (slotLabelsSpace) {
+        return Math.max(graphMemberSlots.slotsWidth + slotLabelsSpace, header.width);
+      }
+
+      function calculateHeightOfMember () {
+        return graphMemberSlots.slotsHeight + header.height;
+      }
+
+      function determinePortLabelPlacement (defaultPortLabelPlacement) {
+        return optionals && optionals.portLabelPlacement
+          ? optionals.portLabelPlacement
+          : defaultPortLabelPlacement;
+      }
+
+      function calculateAdditionalPortSpace (slotsAreaMargin) {
+        return 'top=' + (header.height + slotsAreaMargin * 1.5) +
+          ', bottom=' + slotsAreaMargin + ',left=0,right=0';
+      }
+
+      function determineBorderSpacing () {
+        return optionals && optionals.borderSpacing ? optionals.borderSpacing : 0;
+      }
     },
 
     /**
@@ -311,26 +398,48 @@
      * @private
      */
     _generateComponentHeader: function (memberId, webpackageId, artifactId) {
+      var headerLabels = this._generateComponentHeaderLabels(memberId, webpackageId, artifactId);
+      return {
+        labels: headerLabels,
+        width: calculateHeaderWidth(headerLabels, this.HEADER_MARGIN),
+        height: calculateHeaderHeight(headerLabels, this.HEADER_MARGIN)
+      };
+
+      function calculateHeaderHeight (headerLabels, headerMargin) {
+        var headerHeight = 0;
+        headerLabels.forEach(function (headerLabel) {
+          headerHeight += headerLabel.height;
+        });
+        headerHeight += headerMargin * 2; // Top and bottom margin
+        return headerHeight;
+      }
+
+      function calculateHeaderWidth (headerLabels, headerMargin) {
+        var headerWidth = 0;
+        headerLabels.forEach(function (headerLabel) {
+          headerWidth = Math.max(headerWidth, headerLabel.width);
+        });
+        headerWidth += headerMargin * 2; // Left and right margin
+        return headerWidth;
+      }
+    },
+
+    _generateComponentHeaderLabels: function (memberId, webpackageId, artifactId) {
       var memberIdLabel;
       var webpackageIdLabel;
       var artifactIdLabel;
       webpackageId = webpackageId ? ':' + webpackageId : '';
       artifactId = '/' + artifactId;
       if (memberId) {
-        memberIdLabel = this._createLabel(memberId, this.MEMBER_ID_NAME_FONT, 'memberIdLabel');
-        webpackageIdLabel = this._createLabel(webpackageId, this.MEMBER_COMPONENT_NAME_FONT, 'componentNameLabel');
-        artifactIdLabel = this._createLabel(artifactId, this.MEMBER_COMPONENT_NAME_FONT, 'componentNameLabel');
+        memberIdLabel = this._createViewerLabel(memberId, this.MEMBER_ID_NAME_FONT, 'memberIdLabel');
+        webpackageIdLabel = this._createViewerLabel(webpackageId, this.MEMBER_COMPONENT_NAME_FONT, 'componentNameLabel');
+        artifactIdLabel = this._createViewerLabel(artifactId, this.MEMBER_COMPONENT_NAME_FONT, 'componentNameLabel');
       } else {
-        memberIdLabel = this._createLabel('', {}, 'memberIdLabel');
-        webpackageIdLabel = this._createLabel(webpackageId, this.ROOT_COMPONENT_NAME_FONT, 'componentNameRootLabel');
-        artifactIdLabel = this._createLabel(artifactId, this.ROOT_COMPONENT_NAME_FONT, 'componentNameRootLabel');
+        memberIdLabel = this._createViewerLabel('', {}, 'memberIdLabel');
+        webpackageIdLabel = this._createViewerLabel(webpackageId, this.ROOT_COMPONENT_NAME_FONT, 'componentNameRootLabel');
+        artifactIdLabel = this._createViewerLabel(artifactId, this.ROOT_COMPONENT_NAME_FONT, 'componentNameRootLabel');
       }
-
-      return {
-        labels: [memberIdLabel, webpackageIdLabel, artifactIdLabel],
-        width: Math.max(memberIdLabel.width, webpackageIdLabel.width, artifactIdLabel.width) + this.HEADER_MARGIN * 2,
-        height: memberIdLabel.height + webpackageIdLabel.height + artifactIdLabel.height + this.HEADER_MARGIN * 2
-      };
+      return [memberIdLabel, webpackageIdLabel, artifactIdLabel];
     },
 
     /**
@@ -341,7 +450,7 @@
      * @returns {{text: string, width: number, height: number, className: string, fontObject: {}}}
      * @private
      */
-    _createLabel: function (text, fontObject, className) {
+    _createViewerLabel: function (text, fontObject, className) {
       return {
         text: text,
         width: this._getTextWidth(text, this._fontObjectToString(fontObject)),
@@ -373,7 +482,7 @@
           if (component.slots[l].direction[m] === 'input') {
             maxSlotWidthLeft = Math.max(slotLabelWidth, maxSlotWidthLeft);
             if (!memberId) {
-              this._maxRootInputSlotWidth = maxSlotWidthLeft;
+              this._maxRootComponentSlotWidth = maxSlotWidthLeft;
             }
             inputSlots++;
           } else {
@@ -408,7 +517,7 @@
           portSide: (direction === 'input') ? 'WEST' : 'EAST',
           portAnchor: (direction === 'input') ? '(0.0, 0.5)' : '(0.0, 0.5)'
         },
-        labels: [this._createLabel(slot.slotId, this.SLOT_LABEL_FONT, '')],
+        labels: [this._createViewerLabel(slot.slotId, this.SLOT_LABEL_FONT, '')],
         height: this.SLOT_DIAMETER,
         tooltipHTML: '<strong>Description:</strong> ' + (slot.description || '-') +
         '<br>' + '<strong>Type:</strong> ' + (slot.type || '-')
@@ -458,7 +567,7 @@
       }
       return {
         id: compoundConnection.connectionId,
-        labels: [this._createLabel(determineConnectionIdLabel(compoundConnection.connectionId),
+        labels: [this._createViewerLabel(determineConnectionIdLabel(compoundConnection.connectionId),
           this.CONNECTION_LABEL_FONT, '')],
         source: source,
         sourcePort: sourcePort,
@@ -1036,7 +1145,7 @@
 
       connectionViewLabel.transition()
         .attr('transform', function (d) {
-          var x = d.labels[0].x + self._maxRootInputSlotWidth + self.CONNECTION_LABEL_MARGIN;
+          var x = d.labels[0].x + self._maxRootComponentSlotWidth + self.CONNECTION_LABEL_MARGIN;
           var y = d.labels[0].y + d.labels[0].height * 2.5;
           return 'translate(' + x + ' ' + y + ')';
         })
@@ -1313,7 +1422,7 @@
     },
 
     _generateMinimap: function () {
-      var viewer = this.$$('#' + this.VIEW_HOLDER_ID);
+      var viewer = this._getViewHolder();
       var viewerDimensions = viewer.getBoundingClientRect();
       var minimapSize = {
         width: viewerDimensions.width * this.MINIMAP_SCALE,
