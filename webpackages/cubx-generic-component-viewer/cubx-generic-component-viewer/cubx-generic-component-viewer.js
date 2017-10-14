@@ -42,7 +42,7 @@
     AD_HOC_COMPONENT: {artifactId: 'ad-hoc-component', slots: [], webpackageId: ''},
     HIGHLIGHTED_CSS_CLASS: 'highlighted',
     GRAYED_OUT_CSS_CLASS: 'grayed-out',
-    MINIMAP_ID: 'minimap',
+    MINIMAP_ID: 'minimapDiagram',
     MINIMAP_SCALE: 0.3,
     DEFAULT_VIEWER_STYLE: {
       heightProportion: 0.7,
@@ -128,7 +128,7 @@
     _getDefaultViewerHeight: function () {
       return this._getProportionOfNumberInPixels(
         this.parentNode.clientHeight,
-        this.this.DEFAULT_VIEWER_STYLE.heightProportion
+        this.DEFAULT_VIEWER_STYLE.heightProportion
       );
     },
 
@@ -141,7 +141,7 @@
     },
 
     /**
-     * Process a scale value to then scale the diagram correctly
+     * Process a scale value to then scale the viewerDiagram correctly
      * @param {string} scale - Scale to be applied
      * @private
      */
@@ -155,9 +155,9 @@
         return;
       }
       if (scale === 'auto') {
-        this._autoScaleAndCenterDiagram(this.svg, this.g);
+        this.viewerDiagram.autoScaleAndCenterDiagram();
       } else {
-        this._scaleDiagram(this.svg, this.g, scale);
+        this.viewerDiagram.applyScaleWithTransition(scale);
       }
     },
 
@@ -177,15 +177,15 @@
     },
 
     _setViewHolderWidth: function (viewerWidth) {
-      this._getViewHolder().style.width = viewerWidth;
+      this._setDimensionsToHtmlElement(this._getViewHolder(), {width: viewerWidth});
     },
 
     _setViewHolderHeight: function (viewerHeight) {
       if (viewerHeight.indexOf('%') !== -1) {
         var proportion = parseInt(viewerHeight.substring(0, viewerHeight.indexOf('%'))) / 100;
-        viewerHeight = this._getProportionOfNumberInPixels(this.parentNode.clientHeight, proportion);
+        viewerHeight = this._getProportionOfNumber(this.parentNode.clientHeight, proportion);
       }
-      this._getViewHolder().style.height = viewerHeight;
+      this._setDimensionsToHtmlElement(this._getViewHolder(), {height: viewerHeight});
     },
 
     _viewerIsReady: function () {
@@ -603,15 +603,15 @@
       // group
       d3.select('#' + this.VIEW_HOLDER_ID).html('');
       var self = this;
-      this.svg = d3.select('#' + this.VIEW_HOLDER_ID)
+      var svg = d3.select('#' + this.VIEW_HOLDER_ID)
         .append('svg')
         .attr('width', '100%')
         .attr('height', '100%');
       var viewHolder = $('#' + this.VIEW_HOLDER_ID);
       var realWidth = viewHolder.width();
       var realHeight = viewHolder.height();
-      this.g = this.svg.append('g');
-      var root = this.g.append('g');
+      var g = svg.append('g');
+      var root = g.append('g');
       var layouter = klay.d3kgraph()
         .size([realWidth, realHeight])
         .transformGroup(root)
@@ -633,8 +633,8 @@
         });
       this.infoToolTip.direction('e');
 
-      this.svg.call(this.infoToolTip);
-      this.diagram = new this.Diagram(this.svg, this.g);
+      svg.call(this.infoToolTip);
+      this.viewerDiagram = new this.Diagram(svg, g);
 
       layouter.on('finish', function (d) {
         var components = layouter.nodes();
@@ -751,13 +751,11 @@
         })
         .each('end', function (d) {
           if (d.id === 'root') {
-            self._generateMinimap();
-            self.diagram.setReflectedDiagram(self.minimapNavigator, 1 / self.MINIMAP_SCALE);
-            self.diagram.setZoomBehavior([self.diagram.calculateAutoScale(), Infinity]);
-            self.diagram.autoScaleAndCenterDiagram();
-            // TODO: check this initial position (should be in diagram class)
-            // TODO: remove this.svg and this.g
-            self.diagram.initialPosition = self.diagram.calculateCenterCoordinates();
+            self._generateMinimapElements();
+            self.viewerDiagram.setReflectedDiagram(self.minimapNavigator, 1 / self.MINIMAP_SCALE);
+            self.viewerDiagram.setZoomBehavior([self.viewerDiagram.calculateAutoScale(), Infinity]);
+            self.viewerDiagram.autoScaleAndCenterDiagram();
+            self.viewerDiagram.initialPosition = self.viewerDiagram.calculateCenterCoordinates();
           }
         });
 
@@ -874,7 +872,7 @@
     _drawConnections: function (connectionData) {
       var self = this;
       // build the arrow.
-      this.svg.append('svg:defs').selectAll('marker')
+      this.viewerDiagram.svgContainer.append('svg:defs').selectAll('marker')
         .data(['end'])                 // define connectionView/path types
         .enter().append('svg:marker')    // add arrows
         .attr('id', String)
@@ -1007,20 +1005,20 @@
     },
 
     /**
-     * Zoom and center the diagram to fit within container
+     * Zoom and center the viewerDiagram to fit within container
      * @private
      */
     _zoomToFit: function () {
-      this.diagram.autoScaleAndCenterDiagram();
+      this.viewerDiagram.autoScaleAndCenterDiagram();
     },
 
     /**
-     * Save the diagram as svg file
+     * Save the viewerDiagram as svg file
      * @private
      */
     _saveAsSvg: function () {
       var serializer = new XMLSerializer();
-      var svg = this.svg.node();
+      var svg = this.viewerDiagram.getSvgContainerNode();
       svg.insertBefore(this._getDefsStyleElement(), svg.firstChild);
       var source = serializer.serializeToString(svg).replace('</style>', '<![CDATA[' + this._getStylesString() + ']]>' + '</style>');
       // add name spaces.
@@ -1216,62 +1214,125 @@
       this._undoGrayOutAllElements();
     },
 
-    _generateMinimap: function () {
-      var viewer = this._getViewHolder();
-      var viewerDimensions = viewer.getBoundingClientRect();
-      var minimapSize = {
-        width: viewerDimensions.width * this.MINIMAP_SCALE,
-        height: viewerDimensions.height * this.MINIMAP_SCALE
-      };
-      var minimapDiv = this.$$('#' + this.MINIMAP_ID);
-      minimapDiv.style.height = getScaleInPixels(minimapSize.height, 1);
-      minimapDiv.style.width = getScaleInPixels(minimapSize.width, 1);;
+    _createMinimapSvgContainer: function () {
+      var minimapDimensions = this._determineMinimapDimensions();
+      return this._createD3Element('svg', this._getMinimapDivContainer(), 'frame-container', minimapDimensions);
+    },
 
+    _createMinimapFrame: function (minimapSvgContainer) {
+      var minimapDimensions = this._determineMinimapDimensions();
+      return this._createD3Element('rect', minimapSvgContainer.node(), 'frame', minimapDimensions);
+    },
 
-      var clonedSvg = viewer.querySelector('svg').cloneNode(true);
-      clonedSvg.removeAttribute('id');
-      var svg = d3.select(clonedSvg);
-      var g = svg.select('g');
-      this.minimap = new this.Diagram(svg, g);
-      this.minimap.setZoomBehavior();
-      setTimeout(function () {
-        minimapDiv.appendChild(clonedSvg);
-        this.minimap.autoScaleAndCenterDiagram();
-      }.bind(this), 1000);
-
-
-      var self = this;
-      var minimapSvg = d3.select(minimapDiv)
-        .append('svg')
-        .attr('class', 'frame-container ' + self.is)
-        .style('height', function () {
-          return getScaleInPixels(minimapSize.height, 1);
-        })
-        .style('width', function () {
-          return getScaleInPixels(minimapSize.width, 1);
-        });
-      var minimapFrame = minimapSvg.append('rect')
-        .attr('class', 'frame ' + this.is)
-        .style('height', function () {
-          return getScaleInPixels(minimapSize.height, 1);
-        })
-        .style('width', function () {
-          return getScaleInPixels(minimapSize.width, 1);
-        });
-
-      this.minimapNavigator = new this.Diagram(minimapSvg, minimapFrame);
-      this.minimapNavigator.restrictedDragging = true;
-      this.minimapNavigator.setReflectedDiagram(this.diagram, this.MINIMAP_SCALE);
-      this.minimapNavigator.setZoomBehavior([0, 1]);
-      function getScaleInPixels (initialValue, scale) {
-        return initialValue * scale + 'px';
+    _createD3Element: function (tagName, container, className, dimensions) {
+      var d3Element = d3.select(container).append(tagName);
+      if (className) {
+        d3Element.attr('class', this._addComponentTagNameToClassName(className));
       }
+      if (dimensions) {
+        this._setDimensionsToHtmlElement(d3Element.node(), dimensions);
+      }
+      return d3Element;
+    },
+
+    _addComponentTagNameToClassName: function (className) {
+      return className + ' ' + this.is;
+    },
+
+    _addPxSuffixToNumber: function (number) {
+      return number + 'px';
+    },
+
+    _determineMinimapDimensions: function () {
+      return {
+        width: this.viewerDiagram.getSvgContainerParentWidth() * this.MINIMAP_SCALE,
+        height: this.viewerDiagram.getSvgContainerParentHeight() * this.MINIMAP_SCALE
+      };
+    },
+
+    _setDimensionsToHtmlElement: function (element, dimensions) {
+      if (dimensions.hasOwnProperty('width')) {
+        element.style.width = this._getDimensionAsString(dimensions.width);
+      }
+      if (dimensions.hasOwnProperty('height')) {
+        element.style.height = this._getDimensionAsString(dimensions.height);
+      }
+    },
+
+    _getDimensionAsString: function (dimension) {
+      if (typeof dimension === 'number') {
+        return this._addPxSuffixToNumber(dimension);
+      } else if (typeof dimension === 'string') {
+        return dimension;
+      } else {
+        return Error('No valid width or height, it should be a number or css valid.', dimension);
+      }
+    },
+
+    _getMinimapDivContainer: function () {
+      return this.$$('#' + this.MINIMAP_ID);
+    },
+
+    _cloneViewerDiagram: function () {
+      var clonedDiagramSvgContainer = d3.select(
+        this._cloneHtmlElement(this.viewerDiagram.getSvgContainerNode(), true)
+      );
+      var clonedDiagramElement = clonedDiagramSvgContainer.select(':first-child');
+      return new this.Diagram(clonedDiagramSvgContainer, clonedDiagramElement);
+    },
+
+    _cloneHtmlElement: function (node, removeIdAttribute) {
+      var cloneElement = node.cloneNode(true);
+      if (removeIdAttribute) {
+        cloneElement.removeAttribute('id');
+      }
+      return cloneElement;
+    },
+
+    _appendMinimapDiagramToContainer: function () {
+      this._getMinimapDivContainer().appendChild(this.minimapDiagram.getSvgContainerNode());
+    },
+
+    _createMinimapNavigator: function () {
+      var minimapSvg = this._createMinimapSvgContainer();
+      var minimapFrame = this._createMinimapFrame(minimapSvg);
+      return new this.Diagram(minimapSvg, minimapFrame);
+    },
+
+    _generateMinimapElements: function () {
+      this._setDimensionsToHtmlElement(this._getMinimapDivContainer(), this._determineMinimapDimensions());
+      this._generateMinimapDiagram();
+      this._generateMinimapNavigator();
+    },
+
+    _generateMinimapDiagram: function () {
+      this.minimapDiagram = this._cloneViewerDiagram();
+      this.minimapDiagram.setZoomBehavior();
+      setTimeout(function () {
+        this._appendMinimapDiagramToContainer();
+        this.minimapDiagram.autoScaleAndCenterDiagram();
+      }.bind(this), 1000);
+    },
+
+    _generateMinimapNavigator: function () {
+      this.minimapNavigator = this._createMinimapNavigator();
+      this.minimapNavigator.restrictedDragging = true;
+      this.minimapNavigator.setReflectedDiagram(this.viewerDiagram, this.MINIMAP_SCALE);
+      this.minimapNavigator.setZoomBehavior([0, 1]);
     },
 
     Diagram: function (svgContainer, diagramElement) {
       this.svgContainer = svgContainer;
       this.element = diagramElement;
       this.defaultScale = 1;
+
+      this.getSvgContainerNode = function () {
+        return this.svgContainer.node();
+      };
+
+      this.getElementNode = function () {
+        return this.element.node();
+      };
 
       /**
        * Scale and center the tree within the svg that contains it
@@ -1289,7 +1350,7 @@
        * @returns {number} - Calculated scale
        * @private
        */
-      this.calculateAutoScale = function (svg, g) {
+      this.calculateAutoScale = function () {
         var scale = Math.min(this.getWidthProportionBetweenSvgElement(), this.getHeightProportionBetweenSvgElement());
         if (isNaN(scale)) {
           console.warn('Dimensions and position of the dependency tree(s) containers could not be ' +
@@ -1308,11 +1369,11 @@
       };
 
       this.getSvgContainerWidth = function () {
-        return this.svgContainer.node().parentNode.clientWidth;
+        return this.getSvgContainerNode().parentNode.clientWidth;
       };
 
       this.getSvgContainerHeight = function () {
-        return this.svgContainer.node().parentNode.clientHeight;
+        return this.getSvgContainerNode().parentNode.clientHeight;
       };
 
       this.getSvgContainerDimensions = function () {
@@ -1323,11 +1384,11 @@
       };
 
       this.getElementWidth = function () {
-        return this.element.node().getBBox().width;
+        return this.getElementNode().getBBox().width;
       };
 
       this.getElementHeight = function () {
-        return this.element.node().getBBox().height;
+        return this.getElementNode().getBBox().height;
       };
 
       this.getElementDimensions = function () {
@@ -1338,11 +1399,11 @@
       };
 
       this.getSvgContainerParentWidth = function () {
-        return this.svgContainer.node().parentNode.clientWidth;
+        return this.getSvgContainerNode().parentNode.clientWidth;
       };
 
       this.getSvgContainerParentHeight = function () {
-        return this.svgContainer.node().parentNode.clientHeight;
+        return this.getSvgContainerNode().parentNode.clientHeight;
       };
 
       this.centerDiagram = function (scale) {
@@ -1476,8 +1537,8 @@
       };
 
       this.getDragRestrictedMaxCoordinates = function () {
-        var svgBoundRect = this.svgContainer.node().getBoundingClientRect();
-        var elementBoundRect = this.element.node().getBoundingClientRect();
+        var svgBoundRect = this.getSvgContainerNode().getBoundingClientRect();
+        var elementBoundRect = this.getElementNode().getBoundingClientRect();
         return {
           x: svgBoundRect.width - elementBoundRect.width,
           y: svgBoundRect.height - elementBoundRect.height
