@@ -778,8 +778,8 @@
             self._generateMinimapElements();
             self.viewerDiagram.setReflectedDiagram(self.minimapNavigator, 1 / self.MINIMAP_SCALE);
             self.viewerDiagram.setZoomBehavior([self.viewerDiagram.calculateAutoScale(), Infinity]);
-            self.viewerDiagram.autoScaleAndCenterDiagram();
             self.viewerDiagram.initialPosition = self.viewerDiagram.calculateCenterCoordinates();
+            self.viewerDiagram.autoScaleAndCenterDiagram();
           }
         });
     },
@@ -1459,8 +1459,6 @@
 
       /**
        * Calculate the right scale to fit 'g' into 'svg'
-       * @param {Element} svg - Svg element containing 'g'
-       * @param {Element} g - Svg group to be fitted into the 'svg' element
        * @returns {number} - Calculated scale
        * @private
        */
@@ -1528,8 +1526,6 @@
 
       /**
        * Calculate the right scale and coordinates to fit and center 'g' within 'svg'
-       * @param {Element} svg - Svg element containing 'g'
-       * @param {Element} g - Svg group to be centered and fitted into the 'svg' element
        * @private
        */
       this.autoScaleAndCenterDiagram = function () {
@@ -1542,8 +1538,6 @@
       /**
        * Apply a transformInfo to 'g', which can be a translation, a scale or both. The updates the zoom
        * behavior according to the applied transformInfo.
-       * @param {Element} svg - Svg element containing 'g'
-       * @param {Element} element - Svg group to be transformed
        * @param {object} transformInfo - Object containing current coordinates and scale of the viewer,
        * e.g: {x: 0, y: 10, scale: 0.5}
        * @private
@@ -1573,8 +1567,6 @@
       /**
        * Calculate the coordinates to center the 'g' element within 'svg'. It considers a scale if
        * needed
-       * @param {Element} svg - Svg element containing 'g'
-       * @param {Element} g - Svg group to be fitted into the 'svg' element
        * @param {number} [scale=1] - Scale to be considered in the calculation
        * @returns {{x: number, y: number}} - Coordinates to center 'g'
        * @private
@@ -1582,21 +1574,19 @@
       this.calculateCenterCoordinates = function (scale) {
         scale = scale || this.defaultScale;
         return {
-          x: Math.abs(this.getSvgContainerParentWidth() - this.getElementWidth() * scale) / 2,
-          y: Math.abs(this.getSvgContainerParentHeight() - this.getElementHeight() * scale) / 2
+          x: Math.abs(this.getSvgContainerWidth() - this.getElementWidth() * scale) / 2,
+          y: Math.abs(this.getSvgContainerHeight() - this.getElementHeight() * scale) / 2
         };
       };
 
       /**
        * Add zoom behavior to the viewer based on the given transform
-       * @param {Element} svg - Svg element containing 'g'
-       * @param {Element} g - Svg group within the 'svg' element
        * @param {object} transform - Object containing current coordinates and scale of the viewer,
        * i.e. {x: x, y: y, scale: z}
        */
       this.zoomDiagram = function (transform) {
         this.updateZoom(transform);
-        this.svgContainer.call(this.zoom);
+        this.zoom.event(this.svgContainer);
       };
 
       this.updateZoom = function (transform) {
@@ -1630,9 +1620,10 @@
               var reflectedTransform = {};
               reflectedTransform.x = -x / (this.reflectedScale * d3.event.scale);
               reflectedTransform.y = -y / (this.reflectedScale * d3.event.scale);
-              if (this.reflectedDiagram.initialPosition) {
-                reflectedTransform.x += this.reflectedDiagram.initialPosition.x / d3.event.scale;
-                reflectedTransform.y += this.reflectedDiagram.initialPosition.y / d3.event.scale;
+              var initialPosition = this.getInitialPosition();
+              if (initialPosition) {
+                reflectedTransform.x += initialPosition.x / d3.event.scale;
+                reflectedTransform.y += initialPosition.y / d3.event.scale;
               }
               reflectedTransform.scale = 1 / d3.event.scale;
               this.reflectedDiagram.element.attr(
@@ -1648,6 +1639,18 @@
           this.updateZoom(initialTransform);
         }
         this.svgContainer.call(this.zoom);
+      };
+
+      this.getInitialPosition = function () {
+        if (this.reflectedDiagram.initialPosition) {
+          return this.reflectedDiagram.initialPosition;
+        } else if (this.initialPosition) {
+          return {
+            x: this.initialPosition.x / this.reflectedScale,
+            y: this.initialPosition.y / this.reflectedScale
+          };
+        }
+        return null;
       };
 
       this.getDragRestrictedMaxCoordinates = function () {
