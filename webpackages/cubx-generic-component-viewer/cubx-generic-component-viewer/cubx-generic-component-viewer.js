@@ -864,19 +864,12 @@
         });
     },
 
-    /**
-     * Draw the connections and their ids as labels
-     * @param {Object} connectionData - Data of each connection (D3)
-     * @private
-     */
-    _drawConnections: function (connectionData) {
-      var self = this;
-      // build the arrow.
+    _addArrowDefinitionsToViewer: function () {
       this.viewerDiagram.svgContainer.append('svg:defs').selectAll('marker')
         .data(['end'])                 // define connectionView/path types
         .enter().append('svg:marker')    // add arrows
         .attr('id', String)
-        .attr('class', 'arrowEnd ' + self.is)
+        .attr('class', this._addComponentTagNameToClassName('arrowEnd'))
         .attr('viewBox', '0 -5 10 10')
         .attr('refX', 10)
         .attr('refY', 0)
@@ -885,14 +878,15 @@
         .attr('orient', 'auto')  // arrowhead color
         .append('svg:path')
         .attr('d', 'M0,-5L10,0L0,5');
+    },
 
-      // Add connections arrows
-      var connectionGroup = connectionData.enter()
-        .append('g')
-        .attr('class', 'connectionView group ' + self.is)
-        .attr('data-source-member-id', function (d) {
-          return d.source;
-        })
+    _createConnectionGroup: function (connectionData) {
+      var self = this;
+      var d3Container = connectionData.enter();
+      var connectionGroup = this._createD3Element('g', d3Container, 'connectionView group');
+      connectionGroup.attr('data-source-member-id', function (d) {
+        return d.source;
+      })
         .attr('data-destination-member-id', function (d) {
           return d.target;
         })
@@ -905,24 +899,35 @@
         .on('click', function (d) {
           handleConnectionClick(d3.select(this).selectAll('path'), d);
         });
-      var connectionView = connectionGroup
-        .append('path')
-        .attr('id', function (d) {
-          // Remove disconnected class to source and target slots
-          d3.select('#' + d.sourcePort).classed('disconnected', false);
-          d3.select('#' + d.targetPort).classed('disconnected', false);
-          return d.id;
-        })
-        .attr('class', 'connectionView ' + self.is)
+      function handleConnectionClick (d3select, d) {
+        d.highlighted = !d.highlighted;
+        if (d.highlighted) {
+          self._highlightElement(d3select);
+        } else {
+          self._undoHighlightElement(d3select, d);
+        }
+      }
+      return connectionGroup;
+    },
+
+    _createConnectionView: function (connectionGroup) {
+      var connectionView = this._createD3Element('path', connectionGroup, 'connectionView');
+      connectionView.attr('id', function (d) {
+        // Remove disconnected class to source and target slots
+        d3.select('#' + d.sourcePort).classed('disconnected', false);
+        d3.select('#' + d.targetPort).classed('disconnected', false);
+        return d.id;
+      })
         .attr('d', 'M0 0')
         .attr('marker-end', 'url(#end)');
+      return connectionView;
+    },
 
-      var connectionViewLabel = connectionGroup
-        .append('text')
-        .attr('class', 'connectionViewLabel ' + self.is)
-        .text(function (d) {
-          return d.labels[0].text + (d.tooltipHTML ? '\t🛈' : '') || '';
-        })
+    _createConnectionViewLabel: function (connectionGroup) {
+      var connectionViewLabel = this._createD3Element('text', connectionGroup, 'connectionViewLabel');
+      connectionViewLabel.text(function (d) {
+        return d.labels[0].text + (d.tooltipHTML ? '\t🛈' : '') || '';
+      })
         .attr('font-size', function (d) {
           return d.labels[0].fontObject.size;
         })
@@ -935,22 +940,40 @@
         .attr('font-family', function (d) {
           return d.labels[0].fontObject.family;
         });
+      return connectionViewLabel;
+    },
 
+    _addTransitionToConnectionViewLabel: function (connectionViewLabel) {
+      var self = this;
       connectionViewLabel.transition()
         .attr('transform', function (d) {
           var x = d.labels[0].x + self._maxRootComponentSlotWidth + self.CONNECTION_LABEL_MARGIN;
           var y = d.labels[0].y + d.labels[0].height * 2.5;
           return 'translate(' + x + ' ' + y + ')';
-        })
-      ;
+        });
+    },
 
+    _setUpConnectionViewLabelTooltip: function (connectionViewLabel) {
       connectionViewLabel.filter(function (d) {
         return d.tooltipHTML;
       })
-        .on('mouseover', self.infoToolTip.show)
-        .on('mouseout', self.infoToolTip.hide);
+        .on('mouseover', this.infoToolTip.show)
+        .on('mouseout', this.infoToolTip.hide);
+    },
 
-      // Apply connections routes
+    _createD3Element: function (tagName, container, className, dimensions) {
+      var d3Element = container.append(tagName);
+      if (className) {
+        d3Element.attr('class', this._addComponentTagNameToClassName(className));
+      }
+      if (dimensions) {
+        this._setDimensionsToHtmlElement(d3Element.node(), dimensions);
+      }
+      return d3Element;
+    },
+
+    _addRoutesToConnections: function (connectionView) {
+      var self = this;
       connectionView.transition().attr('d', function (d) {
         var path = '';
         path += 'M' + (d.sourcePoint.x + self.SLOT_RADIUS) + ' ' + d.sourcePoint.y + ' ';
@@ -960,15 +983,21 @@
         path += 'L' + (d.targetPoint.x - self.SLOT_RADIUS) + ' ' + d.targetPoint.y + ' ';
         return path;
       });
+    },
 
-      function handleConnectionClick (d3select, d) {
-        d.highlighted = !d.highlighted;
-        if (d.highlighted) {
-          self._highlightElement(d3select);
-        } else {
-          self._undoHighlightElement(d3select, d);
-        }
-      }
+    /**
+     * Draw the connections and their ids as labels
+     * @param {Object} connectionData - Data of each connection (D3)
+     * @private
+     */
+    _drawConnections: function (connectionData) {
+      this._addArrowDefinitionsToViewer();
+      var connectionGroup = this._createConnectionGroup(connectionData);
+      var connectionView = this._createConnectionView(connectionGroup);
+      var connectionViewLabel = this._createConnectionViewLabel(connectionGroup);
+      this._addTransitionToConnectionViewLabel(connectionViewLabel);
+      this._setUpConnectionViewLabelTooltip(connectionViewLabel);
+      this._addRoutesToConnections(connectionView);
     },
 
     /**
@@ -982,7 +1011,7 @@
      */
     _getTextWidth: function (text, font) {
       // re-use canvas object for better performance
-      var canvas = this._getTextWidth.canvas || (this._getTextWidth.canvas = document.createElement('canvas'));
+      var canvas = this.canvas || (this.canvas = document.createElement('canvas'));
       var context = canvas.getContext('2d');
       context.font = font;
       var metrics = context.measureText(text);
@@ -1017,22 +1046,42 @@
      * @private
      */
     _saveAsSvg: function () {
-      var serializer = new XMLSerializer();
-      var svg = this.viewerDiagram.getSvgContainerNode();
-      svg.insertBefore(this._getDefsStyleElement(), svg.firstChild);
-      var source = serializer.serializeToString(svg).replace('</style>', '<![CDATA[' + this._getStylesString() + ']]>' + '</style>');
-      // add name spaces.
-      if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
-        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-      }
-      if (!source.match(/^<svg[^>]+"http:\/\/www\.w3\.org\/1999\/xlink"/)) {
-        source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-      }
-      // add xml declaration
-      source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
-
-      var blob = new Blob([source], {type: 'image/svg+xml'});
+      var svg = this.viewerDiagram.getSvgContainerNode().cloneNode(true);
+      var serializedSvg = this._serializeSvg(svg);
+      serializedSvg = this._addStyleToSerializedSvg(serializedSvg);
+      serializedSvg = this._addNamespacesToSerializedSvg(serializedSvg);
+      serializedSvg = this._addXmlDeclarationToSerializedSvg(serializedSvg);
+      var blob = this._createBlobForSerializedSvg(serializedSvg);
       saveAs(blob, this._component.artifactId + '.svg');
+    },
+
+    _createBlobForSerializedSvg: function (serializedSvg) {
+      return new Blob([serializedSvg], {type: 'image/svg+xml'});
+    },
+
+    _addXmlDeclarationToSerializedSvg: function (serializedSvg) {
+      return '<?xml version="1.0" standalone="no"?>\r\n' + serializedSvg;
+    },
+
+    _addNamespacesToSerializedSvg: function (serializedSvg) {
+      if (!serializedSvg.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
+        return serializedSvg.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+      if (!serializedSvg.match(/^<svg[^>]+"http:\/\/www\.w3\.org\/1999\/xlink"/)) {
+        return serializedSvg.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+      }
+    },
+
+    _addStyleToSerializedSvg: function (serializedSvg) {
+      return serializedSvg.replace(
+        '</style>', '<![CDATA[' + this._getStylesStringOfComponent() + ']]>' + '</style>'
+      );
+    },
+
+    _serializeSvg: function (svg) {
+      var serializer = new XMLSerializer();
+      svg.insertBefore(this._getDefsStyleElement(), svg.firstChild);
+      return serializer.serializeToString(svg);
     },
 
     /**
@@ -1040,19 +1089,41 @@
      * @param e
      * @private
      */
-    _hideShowDisconnectedSlots: function (e) {
+    _handleHIdeShowDisconnectedSlotsButton: function (e) {
       if (this._disconnectedSlotsHidden) {
-        d3.selectAll('.disconnected').style('display', 'block');
-        e.currentTarget.querySelector('i').classList.remove('glyphicon-eye-open');
-        e.currentTarget.querySelector('i').classList.add('glyphicon-eye-close');
-        e.currentTarget.querySelector('span').innerHTML = 'Hide disconnected slots';
+        this._showDisconnectedSlots();
+        this._updateHideShowDisconnectedSlotsToHide(e.currentTarget);
       } else {
-        d3.selectAll('.disconnected').style('display', 'none');
-        e.currentTarget.querySelector('i').classList.remove('glyphicon-eye-close');
-        e.currentTarget.querySelector('i').classList.add('glyphicon-eye-open');
-        e.currentTarget.querySelector('span').innerHTML = 'Show disconnected slots';
+        this._hideDisconnectedSlots();
+        this._updateHideShowDisconnectedSlotsToShow(e.currentTarget);
       }
       this._disconnectedSlotsHidden = !this._disconnectedSlotsHidden;
+    },
+
+    _updateHideShowDisconnectedSlotsToHide: function (buttonElement) {
+      this._updateHideShowDisconnectedSlotsButton(
+        buttonElement, 'glyphicon-eye-open', 'glyphicon-eye-close', 'Hide disconnected slots'
+      );
+    },
+
+    _updateHideShowDisconnectedSlotsToShow: function (buttonElement) {
+      this._updateHideShowDisconnectedSlotsButton(
+        buttonElement, 'glyphicon-eye-close', 'glyphicon-eye-open', 'Show disconnected slots'
+      );
+    },
+
+    _updateHideShowDisconnectedSlotsButton: function (buttonElement, classToRemove, classToAdd, buttonText) {
+      buttonElement.querySelector('i').classList.remove(classToRemove);
+      buttonElement.querySelector('i').classList.add(classToAdd);
+      buttonElement.querySelector('span').innerHTML = buttonText;
+    },
+
+    _hideDisconnectedSlots: function () {
+      d3.selectAll('.disconnected').style('display', 'none');
+    },
+
+    _showDisconnectedSlots: function () {
+      d3.selectAll('.disconnected').style('display', 'block');
     },
 
     /**
@@ -1073,7 +1144,7 @@
      * @returns {string} - Css rules difinitions
      * @private
      */
-    _getStylesString: function () {
+    _getStylesStringOfComponent: function () {
       var styles = '';
       var styleSheets = document.styleSheets;
       var cssRules;
@@ -1140,16 +1211,20 @@
       var memberBorder = d3.select('[id="' + memberId + '"] rect');
       if (!memberBorder.empty()) {
         this._highlightElement(memberBorder);
-        var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
-        nonConnectedMembersIds.forEach(function (memberId) {
-          var nonConnectedMember = d3.select('[id="' + memberId + '"]');
-          if (nonConnectedMember) {
-            this._grayOutElement(nonConnectedMember);
-            this._grayOutElement(d3.selectAll('[data-destination-member-id="' + memberId + '"]'));
-            this._grayOutElement(d3.selectAll('[data-source-member-id="' + memberId + '"]'));
-          }
-        }.bind(this));
+        this._grayOutNonDirectConnectedMembers(memberId);
       }
+    },
+
+    _grayOutNonDirectConnectedMembers: function (memberId) {
+      var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
+      nonConnectedMembersIds.forEach(function (nonConnectedMemberId) {
+        var nonConnectedMember = d3.select('[id="' + nonConnectedMemberId + '"]');
+        if (nonConnectedMember) {
+          this._grayOutElement(nonConnectedMember);
+          this._grayOutElement(d3.selectAll('[data-destination-member-id="' + nonConnectedMemberId + '"]'));
+          this._grayOutElement(d3.selectAll('[data-source-member-id="' + nonConnectedMemberId + '"]'));
+        }
+      }.bind(this));
     },
 
     /** Highlight a element given by the 'd3select'
@@ -1216,23 +1291,12 @@
 
     _createMinimapSvgContainer: function () {
       var minimapDimensions = this._determineMinimapDimensions();
-      return this._createD3Element('svg', this._getMinimapDivContainer(), 'frame-container', minimapDimensions);
+      return this._createD3Element('svg', d3.select(this._getMinimapDivContainer()), 'frame-container', minimapDimensions);
     },
 
     _createMinimapFrame: function (minimapSvgContainer) {
       var minimapDimensions = this._determineMinimapDimensions();
-      return this._createD3Element('rect', minimapSvgContainer.node(), 'frame', minimapDimensions);
-    },
-
-    _createD3Element: function (tagName, container, className, dimensions) {
-      var d3Element = d3.select(container).append(tagName);
-      if (className) {
-        d3Element.attr('class', this._addComponentTagNameToClassName(className));
-      }
-      if (dimensions) {
-        this._setDimensionsToHtmlElement(d3Element.node(), dimensions);
-      }
-      return d3Element;
+      return this._createD3Element('rect', minimapSvgContainer, 'frame', minimapDimensions);
     },
 
     _addComponentTagNameToClassName: function (className) {
