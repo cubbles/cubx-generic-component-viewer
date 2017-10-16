@@ -594,25 +594,32 @@
       }
     },
 
-    /**
-     * Build and append all the graphic elements of a component described by a Kgraph
-     * @param {object} componentGraph - JSON KGraph to be displayed
-     * @private
-     */
-    _drawComponent: function (componentGraph) {
-      // group
-      d3.select('#' + this.VIEW_HOLDER_ID).html('');
-      var self = this;
-      var svg = d3.select('#' + this.VIEW_HOLDER_ID)
+    _createDiagramSvgContainer: function () {
+      return d3.select('#' + this.VIEW_HOLDER_ID)
         .append('svg')
         .attr('width', '100%')
         .attr('height', '100%');
+    },
+
+    _createDiagramElement: function (svg) {
+      return svg.append('g');
+    },
+
+    _createInfoToolTip: function () {
+      this.infoToolTip = d3.tip()
+        .attr('class', 'info_tooltip ' + this.is)
+        .offset([30, 0])
+        .html(function (d) {
+          return d.tooltipHTML;
+        });
+      this.infoToolTip.direction('e');
+    },
+
+    _createLayouter: function (root) {
       var viewHolder = $('#' + this.VIEW_HOLDER_ID);
       var realWidth = viewHolder.width();
       var realHeight = viewHolder.height();
-      var g = svg.append('g');
-      var root = g.append('g');
-      var layouter = klay.d3kgraph()
+      return klay.d3kgraph()
         .size([realWidth, realHeight])
         .transformGroup(root)
         .options({
@@ -623,19 +630,10 @@
           crossMin: 'LAYER_SWEEP',
           algorithm: 'de.cau.cs.kieler.klay.layered'
         });
+    },
 
-      // Tooltip
-      this.infoToolTip = d3.tip()
-        .attr('class', 'info_tooltip ' + this.is)
-        .offset([30, 0])
-        .html(function (d) {
-          return d.tooltipHTML;
-        });
-      this.infoToolTip.direction('e');
-
-      svg.call(this.infoToolTip);
-      this.viewerDiagram = new this.Diagram(svg, g);
-
+    _setUpLayouter: function (layouter, componentGraph, root) {
+      var self = this;
       layouter.on('finish', function (d) {
         var components = layouter.nodes();
         var connections = layouter.links(components);
@@ -661,6 +659,31 @@
         self.status = 'ready';
       });
       layouter.kgraph(componentGraph);
+    },
+
+    _cleanViewHolder: function () {
+      d3.select('#' + this.VIEW_HOLDER_ID).html('');
+    },
+
+    _createViewerDiagram: function () {
+      var svg = this._createDiagramSvgContainer();
+      var g = this._createDiagramElement(svg);
+      this.viewerDiagram = new this.Diagram(svg, g);
+    },
+
+    /**
+     * Build and append all the graphic elements of a component described by a Kgraph
+     * @param {object} componentGraph - JSON KGraph to be displayed
+     * @private
+     */
+    _drawComponent: function (componentGraph) {
+      this._cleanViewHolder();
+      this._createViewerDiagram();
+      this._createInfoToolTip();
+      this.viewerDiagram.svgContainer.call(this.infoToolTip);
+      var root = this.viewerDiagram.element.append('g');
+      var layouter = this._createLayouter(root);
+      this._setUpLayouter(layouter, componentGraph, root);
     },
 
     _createComponentView: function (componentsData) {
