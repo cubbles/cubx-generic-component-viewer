@@ -796,42 +796,36 @@
       this._drawComponentsSlots(componentsData);
     },
 
-    /**
-     * Draw the components' slots and their ids as labels
-     * @param {Object} componentsData - Data of each component (D3)
-     * @private
-     */
-    _drawComponentsSlots: function (componentsData) {
-      var self = this;
-
-      // slots
-      var slotView = componentsData.selectAll('.slotView')
+    _createSlotView: function (componentsData) {
+      var containerD3Select = componentsData.selectAll('.slotView')
         .data(function (d) {
           return d.ports || [];
         })
-        .enter()
-        .append('g')
-        .attr('id', function (d) {
-          return d.id;
-        })
-        .attr('class', 'slotView disconnected ' + self.is);
+        .enter();
+      var slotView = this._createD3Element('g', containerD3Select, 'slotView disconnected');
+      slotView.attr('id', function (d) {
+        return d.id;
+      });
 
-      slotView.append('circle')
-        .attr('class', 'slotViewAtom ' + self.is)
-        .attr('r', self.SLOT_RADIUS)
-        .on('mouseover', self.infoToolTip.show)
-        .on('mouseout', self.infoToolTip.hide);
+      var circle = this._createD3Element('circle', slotView, 'slotViewAtom');
+      circle.attr('r', this.SLOT_RADIUS)
+        .on('mouseover', this.infoToolTip.show)
+        .on('mouseout', this.infoToolTip.hide);
 
-      // slots labels
-      slotView.selectAll('.slotViewLabel')
+      return slotView;
+    },
+
+    _addLabelsToSlotView: function (slotView) {
+      var self = this;
+      var d3Container = slotView.selectAll('.slotViewLabel')
         .data(function (d) {
           return d.labels;
         })
-        .enter()
-        .append('text')
-        .text(function (d) {
-          return d.text;
-        })
+        .enter();
+      var slotViewLabels = this._createD3Element('text', d3Container, 'slotViewLabel');
+      slotViewLabels.text(function (d) {
+        return d.text;
+      })
         .attr('text-anchor', function (d) {
           return (d.x > 0) ? 'start' : 'end';
         })
@@ -841,7 +835,6 @@
         .attr('y', function (d) {
           return Math.abs(d.height / 2 - self.SLOT_RADIUS / 2);
         })
-        .attr('class', 'slotViewLabel ' + self.is)
         .attr('font-size', function (d) {
           return d.fontObject.size;
         })
@@ -854,7 +847,9 @@
         .attr('font-family', function (d) {
           return d.fontObject.family;
         });
+    },
 
+    _addSlotTransitionToSlotView: function (slotView) {
       slotView.transition()
         .attr('transform', function (d, i, j) {
           if (d.properties.portSide === 'EAST' && d.x === 0) {
@@ -862,6 +857,17 @@
           }
           return 'translate(' + (d.x || 0) + ' ' + (d.y || 0) + ')';
         });
+    },
+
+    /**
+     * Draw the components' slots and their ids as labels
+     * @param {Object} componentsData - Data of each component (D3)
+     * @private
+     */
+    _drawComponentsSlots: function (componentsData) {
+      var slotView = this._createSlotView(componentsData);
+      this._addLabelsToSlotView(slotView);
+      this._addSlotTransitionToSlotView(slotView);
     },
 
     _addArrowDefinitionsToViewer: function () {
