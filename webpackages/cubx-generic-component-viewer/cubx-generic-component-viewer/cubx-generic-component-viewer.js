@@ -663,14 +663,9 @@
       layouter.kgraph(componentGraph);
     },
 
-    /**
-     * Draw a square for each component and its id as label
-     * @param {Object} componentsData - Data of each component (D3)
-     * @private
-     */
-    _drawMembers: function (componentsData) {
+    _createComponentView: function (componentsData) {
       var self = this;
-      var componentView = componentsData.enter()
+      return componentsData.enter()
         .append('g')
         .attr('id', function (d) {
           return d.id;
@@ -678,12 +673,11 @@
         .attr('class', function (d) {
           var classList = '';
           if (d.children) {
-            classList += 'componentView root ';
+            classList += 'componentView root';
           } else {
-            classList += 'componentView member ';
+            classList += 'componentView member';
           }
-          classList += self.is;
-          return classList;
+          return self._addComponentTagNameToClassName(classList);
         })
         .on('click', function (d) {
           if (d3.event.defaultPrevented) {
@@ -695,35 +689,38 @@
             self._highlightMember(d.id);
           }
         });
+    },
 
-      var atoms = componentView.append('rect')
+    _createComponentViewRect: function (componentView) {
+      var self = this;
+      return componentView.append('rect')
         .attr('class', function (d) {
           var classList = '';
           if (d.id !== 'root') {
             if (d.children) {
-              classList += 'componentViewAtom root ';
+              classList += 'componentViewAtom root';
             } else {
-              classList += 'componentViewAtom member ';
+              classList += 'componentViewAtom member';
             }
           }
-          classList += self.is;
-          return classList;
+          return self._addComponentTagNameToClassName(classList);
         });
+    },
 
-      var headingAtom = componentView.append('g')
-        .attr('class', 'headingAtom ' + self.is);
-
-      headingAtom.transition()
+    _createHeadingGroup: function (componentView) {
+      var headingGroup = this._createD3Element('g', componentView, 'headingAtom');
+      headingGroup.transition()
         .attr('width', function (d) {
           return d.width;
         })
         .attr('height', function (d) {
           return d.headerHeight;
         });
+      return headingGroup;
+    },
 
-      var splitLine = componentView.append('line')
-        .attr('class', 'splitLine ' + self.is);
-
+    _addSplitLineToComponentView: function (componentView) {
+      var splitLine = this._createD3Element('line', componentView, 'splitLine');
       splitLine.transition()
         .attr('x1', 0)
         .attr('x2', function (d) {
@@ -735,14 +732,18 @@
         .attr('y2', function (d) {
           return d.headerHeight;
         });
+    },
 
-      // Apply componentView positions
+    _setTransitionToComponentView: function (componentView) {
       componentView.transition()
         .attr('transform', function (d) {
           return 'translate(' + (d.x || 0) + ' ' + (d.y || 0) + ')';
         });
+    },
 
-      atoms.transition()
+    _setTransitionToComponentViewRect: function (componentViewRect) {
+      var self = this;
+      componentViewRect.transition()
         .attr('width', function (d) {
           return d.width;
         })
@@ -758,9 +759,11 @@
             self.viewerDiagram.initialPosition = self.viewerDiagram.calculateCenterCoordinates();
           }
         });
+    },
 
-      // Nodes labels
-      var componentViewLabel = headingAtom.selectAll('.componentViewHeaderLabel')
+    _createComponentViewLabel: function (headingGroup) {
+      var self = this;
+      return headingGroup.selectAll('.componentViewHeaderLabel')
         .data(function (d) {
           return d.labels || [];
         })
@@ -770,7 +773,7 @@
           return d.text;
         })
         .attr('class', function (d) {
-          return 'componentViewHeaderLabel ' + d.className + ' ' + self.is;
+          return self._addComponentTagNameToClassName('componentViewHeaderLabel ' + d.className);
         })
         .attr('font-size', function (d) {
           return d.fontObject.size;
@@ -784,7 +787,10 @@
         .attr('font-family', function (d) {
           return d.fontObject.family;
         });
+    },
 
+    _setTransitionToComponentViewLabel: function (componentViewLabel) {
+      var self = this;
       componentViewLabel.transition()
         .attr('x', function (d, i, j) {
           return componentViewLabel[j].parentNode.__data__.width / 2;
@@ -792,7 +798,22 @@
         .attr('y', function (d) {
           return d.y + d.height + self.HEADER_MARGIN;
         });
+    },
 
+    /**
+     * Draw a square for each component and its id as label
+     * @param {Object} componentsData - Data of each component (D3)
+     * @private
+     */
+    _drawMembers: function (componentsData) {
+      var componentView = this._createComponentView(componentsData);
+      var componentViewRect = this._createComponentViewRect(componentView);
+      var headingGroup = this._createHeadingGroup(componentView);
+      this._addSplitLineToComponentView(componentView);
+      this._setTransitionToComponentView(componentView);
+      this._setTransitionToComponentViewRect(componentViewRect);
+      var componentViewLabel = this._createComponentViewLabel(headingGroup);
+      this._setTransitionToComponentViewLabel(componentViewLabel);
       this._drawComponentsSlots(componentsData);
     },
 
