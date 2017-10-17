@@ -1011,13 +1011,17 @@
         .on('mouseout', this.infoToolTip.hide);
     },
 
-    _createD3Element: function (tagName, container, className, dimensions) {
+    _createD3Element: function (tagName, container, className, dimensions, isSvg) {
       var d3Element = container.append(tagName);
       if (className) {
         d3Element.attr('class', this._addComponentTagNameToClassName(className));
       }
       if (dimensions) {
-        this._setDimensionsToHtmlElement(d3Element.node(), dimensions);
+        if (isSvg) {
+          this._setDimensionsToSvgElement(d3Element.node(), dimensions);
+        } else {
+          this._setDimensionsToHtmlElement(d3Element.node(), dimensions);
+        }
       }
       return d3Element;
     },
@@ -1346,7 +1350,7 @@
 
     _createMinimapFrame: function (minimapSvgContainer) {
       var minimapDimensions = this._determineMinimapDimensions();
-      return this._createD3Element('rect', minimapSvgContainer, 'frame', minimapDimensions);
+      return this._createD3Element('rect', minimapSvgContainer, 'frame', minimapDimensions, true);
     },
 
     _addComponentTagNameToClassName: function (className) {
@@ -1370,6 +1374,15 @@
       }
       if (dimensions.hasOwnProperty('height')) {
         element.style.height = this._getDimensionAsString(dimensions.height);
+      }
+    },
+
+    _setDimensionsToSvgElement: function (element, dimensions) {
+      if (dimensions.hasOwnProperty('width')) {
+        element.setAttribute('width', this._getDimensionAsString(dimensions.width));
+      }
+      if (dimensions.hasOwnProperty('height')) {
+        element.setAttribute('height', this._getDimensionAsString(dimensions.height));
       }
     },
 
