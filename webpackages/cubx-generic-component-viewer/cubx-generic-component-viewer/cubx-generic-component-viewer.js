@@ -1433,12 +1433,12 @@
     },
 
     _generateMinimapDiagram: function () {
-      this.minimapDiagram = this._cloneViewerDiagram();
-      this.minimapDiagram.setZoomBehavior();
       setTimeout(function () {
+        this.minimapDiagram = this._cloneViewerDiagram();
+        this.minimapDiagram.setZoomBehavior();
         this._appendMinimapDiagramToContainer();
         this.minimapDiagram.autoScaleAndCenterDiagram();
-      }.bind(this), 1000);
+      }.bind(this), 500);
     },
 
     _generateMinimapNavigator: function () {
