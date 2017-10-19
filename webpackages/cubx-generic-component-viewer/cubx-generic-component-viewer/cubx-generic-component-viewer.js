@@ -118,6 +118,10 @@
       }
     },
 
+    _calculateHeightToIncludeMinimap: function (height) {
+      return height - height * this.MINIMAP_SCALE;
+    },
+
     _setInitialStyleToViewHolder: function () {
       this._setViewHolderWidth(this.getViewerWidth() || this.DEFAULT_VIEWER_STYLE.width);
       this._setViewHolderHeight(this.getViewerHeight() || this._getDefaultViewerHeight());
