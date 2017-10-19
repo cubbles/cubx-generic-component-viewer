@@ -226,6 +226,11 @@
       this._resetMaxRootComponentSlotWidth();
       this._updateViewerTitle();
       this._drawComponent(this._generateComponentGraph());
+      this._resetMinimap();
+    },
+
+    _resetMinimap: function () {
+      this._cleanElement(this._getMinimapDivContainer());
     },
 
     _resetMaxRootComponentSlotWidth: function () {
@@ -662,7 +667,11 @@
     },
 
     _cleanViewHolder: function () {
-      d3.select('#' + this.VIEW_HOLDER_ID).html('');
+      this._cleanElement(this._getViewHolder());
+    },
+
+    _cleanElement: function (element) {
+      d3.select(element).html('');
     },
 
     _createViewerDiagram: function () {
