@@ -1436,6 +1436,7 @@
     },
 
     _generateMinimapElements: function () {
+      this._resetMinimap();
       this._setDimensionsToHtmlElement(this._getMinimapDivContainer(), this._determineMinimapDimensions());
       this._generateMinimapDiagram();
       this._generateMinimapNavigator();
