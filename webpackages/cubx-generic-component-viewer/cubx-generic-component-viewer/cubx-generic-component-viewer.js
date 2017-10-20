@@ -109,6 +109,10 @@
       this._startWorking();
     },
 
+    modelShowTitleChanged: function (showViewerTitle) {
+      this._updateViewerTitle();
+    },
+
     /**
      *  Observe the Cubbles-Component-Model: If value for slot 'highlightedMember' has changed ...
      */
