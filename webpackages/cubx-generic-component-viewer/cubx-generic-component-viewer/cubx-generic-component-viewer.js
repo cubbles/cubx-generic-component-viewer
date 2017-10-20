@@ -172,7 +172,7 @@
       } else if (scale === 'auto' || scale === 'none') {
         return true;
       } else {
-        return (isNaN(parseFloat(scale)));
+        return (!isNaN(parseFloat(scale)));
       }
     },
 
