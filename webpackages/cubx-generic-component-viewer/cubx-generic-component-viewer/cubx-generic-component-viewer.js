@@ -1417,6 +1417,7 @@
       var clonedDiagramSvgContainer = d3.select(
         this._cloneHtmlElement(this.viewerDiagram.getSvgContainerNode(), true)
       );
+      clonedDiagramSvgContainer.attr('class', this._addComponentTagNameToClassName('minimap-diagram'))
       var clonedDiagramElement = clonedDiagramSvgContainer.select(':first-child');
       return new this.Diagram(clonedDiagramSvgContainer, clonedDiagramElement);
     },
@@ -1448,11 +1449,19 @@
 
     _generateMinimapDiagram: function () {
       setTimeout(function () {
+        this._cleanMinimapDiagram();
         this.minimapDiagram = this._cloneViewerDiagram();
         this.minimapDiagram.setZoomBehavior();
         this._appendMinimapDiagramToContainer();
         this.minimapDiagram.autoScaleAndCenterDiagram();
       }.bind(this), 500);
+    },
+
+    _cleanMinimapDiagram: function () {
+      var minimapDiagram = this._getMinimapDivContainer().querySelector('.minimap-diagram');
+      if (minimapDiagram) {
+        this._getMinimapDivContainer().removeChild(minimapDiagram);
+      }
     },
 
     _generateMinimapNavigator: function () {
