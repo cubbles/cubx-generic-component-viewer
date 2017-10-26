@@ -487,7 +487,7 @@
       var slotLabelWidth;
       for (var l = 0; l < component.slots.length; l++) {
         if (!component.slots[l].hasOwnProperty('direction')) {
-          component.slots[l].direction = ['input'];
+          component.slots[l].direction = ['input', 'output'];
         }
         for (var m = 0; m < component.slots[l].direction.length; m++) {
           slotLabelWidth = this._getTextWidth(component.slots[l].slotId, this._fontObjectToString(this.SLOT_LABEL_FONT));
