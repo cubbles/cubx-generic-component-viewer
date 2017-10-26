@@ -193,7 +193,7 @@
     },
 
     _viewerIsReady: function () {
-      return this.status === 'ready';
+      return this.getStatus() === 'ready';
     },
 
     _getViewHolder: function () {
