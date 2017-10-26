@@ -131,6 +131,15 @@
             "direction": [
               "input"
             ]
+          },
+          {
+            "slotId": "status",
+            "type": "string",
+            "description": "Describes the status of the viewer ('init', 'working', 'ready').",
+            "direction": [
+             "output"
+            ],
+            "value": "init"
           }
         ]
       }

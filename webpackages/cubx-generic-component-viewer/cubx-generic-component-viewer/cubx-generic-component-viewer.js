@@ -208,7 +208,7 @@
      * @private
      */
     _startWorking: function () {
-      this.status = 'init';
+      this.setStatus('working');
       if (this.getDefinitions().componentArtifactId) {
         this._component = this.getDefinitions().components[this.getDefinitions().componentArtifactId];
         if (this._component) {
@@ -668,7 +668,6 @@
         if (self.getHighlightedMember()) {
           self._highlightMember(self.getHighlightedMember());
         }
-        self.status = 'ready';
       });
       layouter.kgraph(componentGraph);
     },
@@ -1457,6 +1456,7 @@
         this.minimapDiagram.setZoomBehavior();
         this._appendMinimapDiagramToContainer();
         this.minimapDiagram.autoScaleAndCenterDiagram();
+        this.setStatus('ready');
       }.bind(this), 500);
     },
 
