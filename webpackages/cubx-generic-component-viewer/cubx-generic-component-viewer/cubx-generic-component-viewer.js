@@ -1661,8 +1661,8 @@
               reflectedTransform.y = -y / (this.reflectedScale * d3.event.scale);
               var initialPosition = this.getInitialPosition();
               if (initialPosition) {
-                reflectedTransform.x += initialPosition.x / d3.event.scale;
-                reflectedTransform.y += initialPosition.y / d3.event.scale;
+                reflectedTransform.x += initialPosition.x / this.reflectedScale;
+                reflectedTransform.y += initialPosition.y / this.reflectedScale;;
               }
               reflectedTransform.scale = 1 / d3.event.scale;
               this.reflectedDiagram.element.attr(
@@ -1681,13 +1681,10 @@
       };
 
       this.getInitialPosition = function () {
-        if (this.reflectedDiagram.initialPosition) {
+        if (this.initialPosition) {
+          return this.initialPosition
+        } else if (this.reflectedDiagram.initialPosition) {
           return this.reflectedDiagram.initialPosition;
-        } else if (this.initialPosition) {
-          return {
-            x: this.initialPosition.x / this.reflectedScale,
-            y: this.initialPosition.y / this.reflectedScale
-          };
         }
         return null;
       };
