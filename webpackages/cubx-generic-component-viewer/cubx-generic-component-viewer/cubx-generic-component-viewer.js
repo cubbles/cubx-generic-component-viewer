@@ -1645,31 +1645,8 @@
       this.setZoomBehavior = function (scaleExtent, initialTransform) {
         this.zoom = d3.behavior.zoom()
           .on('zoom', function () {
-            var x = d3.event.translate[0];
-            var y = d3.event.translate[1];
-            if (this.restrictedDragging) {
-              var maxCoordinates = this.getDragRestrictedMaxCoordinates(this.svgContainer, this.element);
-              x = Math.max(0, Math.min(x, maxCoordinates.x));
-              y = Math.max(0, Math.min(y, maxCoordinates.y));
-            }
-            this.element.attr(
-              'transform', this.generateTransformString({x: x, y: y, scale: d3.event.scale})
-            );
-            if (this.reflectedDiagram) {
-              var reflectedTransform = {};
-              reflectedTransform.x = -x / (this.reflectedScale * d3.event.scale);
-              reflectedTransform.y = -y / (this.reflectedScale * d3.event.scale);
-              var initialPosition = this.getInitialPosition();
-              if (initialPosition) {
-                reflectedTransform.x += initialPosition.x / this.reflectedScale;
-                reflectedTransform.y += initialPosition.y / this.reflectedScale;;
-              }
-              reflectedTransform.scale = 1 / d3.event.scale;
-              this.reflectedDiagram.element.attr(
-                'transform', this.reflectedDiagram.generateTransformString(reflectedTransform)
-              );
-              this.reflectedDiagram.updateZoom(reflectedTransform);
-            }
+            var initialZoomTransform = { x: d3.event.translate[0], y: d3.event.translate[1], scale: d3.event.scale };
+            this.zoomElement(initialZoomTransform);
           }.bind(this));
         if (scaleExtent) {
           this.zoom.scaleExtent(scaleExtent);
@@ -1678,6 +1655,39 @@
           this.updateZoom(initialTransform);
         }
         this.svgContainer.call(this.zoom);
+      };
+
+      this.zoomElement = function (initialZoomTransform) {
+        var zoomTransform = this.calculateProperZoomTransform(initialZoomTransform);
+        this.element.attr('transform', this.generateTransformString(zoomTransform));
+        if (this.reflectedDiagram) {
+          this.zoomReflectedDiagram(zoomTransform);
+        }
+      };
+
+      this.calculateProperZoomTransform = function (initialZoomTransform) {
+        if (this.restrictedDragging) {
+          var maxCoordinates = this.getDragRestrictedMaxCoordinates(this.svgContainer, this.element);
+          initialZoomTransform.x = Math.max(0, Math.min(initialZoomTransform.x, maxCoordinates.x));
+          initialZoomTransform.y = Math.max(0, Math.min(initialZoomTransform.y, maxCoordinates.y));
+        }
+        return initialZoomTransform;
+      };
+
+      this.zoomReflectedDiagram = function (transform) {
+        var reflectedTransform = {};
+        reflectedTransform.x = -transform.x / (this.reflectedScale * transform.scale);
+        reflectedTransform.y = -transform.y / (this.reflectedScale * transform.scale);
+        var initialPosition = this.getInitialPosition();
+        if (initialPosition) {
+          reflectedTransform.x += initialPosition.x / this.reflectedScale;
+          reflectedTransform.y += initialPosition.y / this.reflectedScale;
+        }
+        reflectedTransform.scale = 1 / transform.scale;
+        this.reflectedDiagram.element.attr(
+          'transform', this.reflectedDiagram.generateTransformString(reflectedTransform)
+        );
+        this.reflectedDiagram.updateZoom(reflectedTransform);
       };
 
       this.getInitialPosition = function () {
