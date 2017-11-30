@@ -485,6 +485,7 @@
       var inputSlots = 0;
       var outputSlots = 0;
       var slotLabelWidth;
+      component.slots = component.slots || [];
       for (var l = 0; l < component.slots.length; l++) {
         if (!component.slots[l].hasOwnProperty('direction')) {
           component.slots[l].direction = ['input', 'output'];
