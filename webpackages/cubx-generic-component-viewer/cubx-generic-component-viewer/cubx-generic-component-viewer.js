@@ -792,7 +792,7 @@
         .each('end', function (d) {
           if (d.id === 'root') {
             self._generateMinimapElements();
-            self.viewerDiagram.setReflectedDiagram(self.minimapNavigator, 1 / self.MINIMAP_SCALE);
+            self.viewerDiagram.setReflectedDiagram(self.minimapNavigator);
             self.viewerDiagram.setZoomBehavior([self.viewerDiagram.calculateAutoScale(), Infinity]);
             self.viewerDiagram.initialPosition = self.viewerDiagram.calculateCenterCoordinates();
             self.viewerDiagram.autoScaleAndCenterDiagram();
@@ -1471,7 +1471,7 @@
     _generateMinimapNavigator: function () {
       this.minimapNavigator = this._createMinimapNavigator();
       this.minimapNavigator.restrictedDragging = true;
-      this.minimapNavigator.setReflectedDiagram(this.viewerDiagram, this.MINIMAP_SCALE);
+      this.minimapNavigator.setReflectedDiagram(this.viewerDiagram);
       this.minimapNavigator.setZoomBehavior([0, 1]);
     },
 
@@ -1638,9 +1638,9 @@
         }
       };
 
-      this.setReflectedDiagram = function (reflectedDiagram, reflectedScale) {
+      this.setReflectedDiagram = function (reflectedDiagram) {
         this.reflectedDiagram = reflectedDiagram;
-        this.reflectedScale = reflectedScale || this.defaultScale;
+        this.reflectedScale = this.getSvgContainerDimensions().width / reflectedDiagram.getSvgContainerDimensions().width;
       };
 
       this.setZoomBehavior = function (scaleExtent, initialTransform) {
@@ -1694,10 +1694,14 @@
       this.getInitialPosition = function () {
         if (this.initialPosition) {
           return this.initialPosition
-        } else if (this.reflectedDiagram.initialPosition) {
-          return this.reflectedDiagram.initialPosition;
+        } else if (this.reflectedDiagram && this.reflectedDiagram.initialPosition) {
+          return {
+            x: this.reflectedDiagram.initialPosition.x * this.reflectedScale,
+            y: this.reflectedDiagram.initialPosition.y * this.reflectedScale
+          };
+        } else {
+          return { x: 0, y: 0};
         }
-        return null;
       };
 
       this.getDragRestrictedMaxCoordinates = function () {
