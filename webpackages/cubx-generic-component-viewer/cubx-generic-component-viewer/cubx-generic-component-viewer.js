@@ -1695,8 +1695,10 @@
         };
         var initialPosition = this.reflectedDiagram.getInitialPosition();
         if (this.scale < 1) {
+          reflectedTransform.x += initialPosition.x / transform.scale;
           reflectedTransform.y += initialPosition.y / transform.scale;
         } else {
+          reflectedTransform.x += initialPosition.x;
           reflectedTransform.y += initialPosition.y;
         }
         return reflectedTransform;
