@@ -792,10 +792,11 @@
         .each('end', function (d) {
           if (d.id === 'root') {
             self._generateMinimapElements();
-            self.viewerDiagram.setReflectedDiagram(self.minimapNavigator);
             self.viewerDiagram.setZoomBehavior([self.viewerDiagram.calculateAutoScale(), Infinity]);
-            self.viewerDiagram.initialPosition = self.viewerDiagram.calculateCenterCoordinates();
             self.viewerDiagram.autoScaleAndCenterDiagram();
+            self.viewerDiagram.initialPosition = self.viewerDiagram.calculateCenterCoordinates();
+            self.viewerDiagram.setReflectedDiagram(self.minimapNavigator);
+            self.minimapNavigator.setReflectedDiagram(self.viewerDiagram);
           }
         });
     },
@@ -1471,8 +1472,9 @@
     _generateMinimapNavigator: function () {
       this.minimapNavigator = this._createMinimapNavigator();
       this.minimapNavigator.restrictedDragging = true;
-      this.minimapNavigator.setReflectedDiagram(this.viewerDiagram);
+      // this.minimapNavigator.setReflectedDiagram(this.viewerDiagram);
       this.minimapNavigator.setZoomBehavior([0, 1]);
+      this.minimapNavigator.autoScaleAndCenterDiagram();
     },
 
     Diagram: function (svgContainer, diagramElement) {
@@ -1676,19 +1678,28 @@
       };
 
       this.zoomReflectedDiagram = function (transform) {
-        var reflectedTransform = {};
-        reflectedTransform.x = -transform.x / (this.reflectedScale * transform.scale);
-        reflectedTransform.y = -transform.y / (this.reflectedScale * transform.scale);
-        var initialPosition = this.getInitialPosition();
-        if (initialPosition) {
-          reflectedTransform.x += initialPosition.x / this.reflectedScale;
-          reflectedTransform.y += initialPosition.y / this.reflectedScale;
+        if (this.reflectedDiagram) {
+          var reflectedTransform = this.reflectTransform(transform);
+          this.reflectedDiagram.element.attr(
+            'transform', this.reflectedDiagram.generateTransformString(reflectedTransform)
+          );
+          this.reflectedDiagram.updateZoom(reflectedTransform);
         }
-        reflectedTransform.scale = 1 / transform.scale;
-        this.reflectedDiagram.element.attr(
-          'transform', this.reflectedDiagram.generateTransformString(reflectedTransform)
-        );
-        this.reflectedDiagram.updateZoom(reflectedTransform);
+      };
+
+      this.reflectTransform = function (transform) {
+        var reflectedTransform = {
+          x: -transform.x / (this.reflectedScale * transform.scale),
+          y: -transform.y / (this.reflectedScale * transform.scale),
+          scale: 1 / transform.scale
+        };
+        var initialPosition = this.reflectedDiagram.getInitialPosition();
+        if (this.reflectedScale < 1) {
+          reflectedTransform.y += initialPosition.y / transform.scale;
+        } else {
+          reflectedTransform.y += initialPosition.y;
+        }
+        return reflectedTransform;
       };
 
       this.getInitialPosition = function () {
