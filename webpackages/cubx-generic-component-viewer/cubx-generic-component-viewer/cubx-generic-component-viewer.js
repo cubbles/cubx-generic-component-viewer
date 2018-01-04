@@ -1642,7 +1642,7 @@
 
       this.setReflectedDiagram = function (reflectedDiagram) {
         this.reflectedDiagram = reflectedDiagram;
-        this.reflectedScale = this.getSvgContainerDimensions().width / reflectedDiagram.getSvgContainerDimensions().width;
+        this.scale = this.getSvgContainerDimensions().width / reflectedDiagram.getSvgContainerDimensions().width;
       };
 
       this.setZoomBehavior = function (scaleExtent, initialTransform) {
@@ -1689,12 +1689,12 @@
 
       this.reflectTransform = function (transform) {
         var reflectedTransform = {
-          x: -transform.x / (this.reflectedScale * transform.scale),
-          y: -transform.y / (this.reflectedScale * transform.scale),
+          x: -transform.x / (this.scale * transform.scale),
+          y: -transform.y / (this.scale * transform.scale),
           scale: 1 / transform.scale
         };
         var initialPosition = this.reflectedDiagram.getInitialPosition();
-        if (this.reflectedScale < 1) {
+        if (this.scale < 1) {
           reflectedTransform.y += initialPosition.y / transform.scale;
         } else {
           reflectedTransform.y += initialPosition.y;
@@ -1707,8 +1707,8 @@
           return this.initialPosition
         } else if (this.reflectedDiagram && this.reflectedDiagram.initialPosition) {
           return {
-            x: this.reflectedDiagram.initialPosition.x * this.reflectedScale,
-            y: this.reflectedDiagram.initialPosition.y * this.reflectedScale
+            x: this.reflectedDiagram.initialPosition.x * this.scale,
+            y: this.reflectedDiagram.initialPosition.y * this.scale
           };
         } else {
           return { x: 0, y: 0};
