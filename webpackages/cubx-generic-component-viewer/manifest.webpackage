@@ -1,7 +1,7 @@
 {
   "name": "cubx-generic-component-viewer",
   "groupId": "",
-  "version": "1.5.0-SNAPSHOT",
+  "version": "1.4.1",
   "modelVersion": "9.1.1",
   "docType": "webpackage",
   "author": {
@@ -96,7 +96,7 @@
             "direction": [
               "input"
             ],
-            "value": "100%"
+            "value": "60vh"
           },
           {
             "slotId": "viewerTitle",

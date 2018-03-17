@@ -185,9 +185,12 @@
     },
 
     _setViewHolderHeight: function (viewerHeight) {
-      if (viewerHeight.indexOf('%') !== -1) {
+      if (typeof viewerHeight === 'string' && viewerHeight.indexOf('%') !== -1) {
         var proportion = parseInt(viewerHeight.substring(0, viewerHeight.indexOf('%'))) / 100;
         viewerHeight = this._getProportionOfNumber(this.parentNode.clientHeight, proportion);
+      }
+      else if (typeof viewerHeight === "number") {
+        viewerHeight += 'px';
       }
       this._setDimensionsToHtmlElement(this._getViewHolder(), {height: viewerHeight});
     },
