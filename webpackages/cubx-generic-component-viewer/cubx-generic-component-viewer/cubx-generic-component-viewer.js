@@ -611,7 +611,7 @@
     },
 
     _createDiagramSvgContainer: function () {
-      return d3.select('#' + this.VIEW_HOLDER_ID)
+      return d3.select(this.$$('#' + this.VIEW_HOLDER_ID))
         .append('svg')
         .attr('width', '100%')
         .attr('height', '100%');
@@ -632,7 +632,7 @@
     },
 
     _createLayouter: function (root) {
-      var viewHolder = $('#' + this.VIEW_HOLDER_ID);
+      var viewHolder = $(this.$$('#' + this.VIEW_HOLDER_ID));
       var realWidth = viewHolder.width();
       var realHeight = viewHolder.height();
       return klay.d3kgraph()

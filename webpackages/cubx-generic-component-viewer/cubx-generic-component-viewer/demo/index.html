@@ -25,11 +25,12 @@
 <body>
 <!--  Place cubbles components there. -->
 <cubx-generic-component-viewer cubx-webpackage-id="this"></cubx-generic-component-viewer>
+<cubx-generic-component-viewer cubx-webpackage-id="this"></cubx-generic-component-viewer>
 
 <script>
     (function () {
         'use strict';
-        var genericViewer = document.querySelector('cubx-generic-component-viewer');
+        var genericViewers = document.querySelectorAll('cubx-generic-component-viewer');
         var definitions = {
             components: {
                 'cubx-generic-mapper': {
@@ -81,9 +82,11 @@
             componentArtifactId: ''
         };
         document.addEventListener('cifReady', function () {
-            genericViewer._setViewHolderHeight(window.innerHeight * 0.6 + 'px');
-            genericViewer.setHighlightedMember('genericMapper');
-            genericViewer.setDefinitions(definitions);
+            genericViewers.forEach(function (genericViewer) {
+                genericViewer._setViewHolderHeight(window.innerHeight * 0.6 + 'px');
+                genericViewer.setHighlightedMember('genericMapper');
+                genericViewer.setDefinitions(definitions);
+            })
         });
     })()
 </script>
