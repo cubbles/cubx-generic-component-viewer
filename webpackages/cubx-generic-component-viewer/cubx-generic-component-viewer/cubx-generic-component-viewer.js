@@ -1282,7 +1282,7 @@
     _highlightMember: function (memberId) {
       this._resetHighlightingAndGrayOut();
       // normal # selector doesn't work for id starting with a number (i.e. for dynamic generated member ids)
-      var memberBorder = d3.select('[id="' + memberId + '"] rect');
+      var memberBorder = d3.select(this.$$('[id="' + memberId + '"] rect'));
       if (!memberBorder.empty()) {
         this._highlightElement(memberBorder);
         this._grayOutNonDirectConnectedMembers(memberId);
@@ -1292,11 +1292,11 @@
     _grayOutNonDirectConnectedMembers: function (memberId) {
       var nonConnectedMembersIds = this._getNonConnectedMembersIds(memberId);
       nonConnectedMembersIds.forEach(function (nonConnectedMemberId) {
-        var nonConnectedMember = d3.select('[id="' + nonConnectedMemberId + '"]');
+        var nonConnectedMember = d3.select(this.$$('[id="' + nonConnectedMemberId + '"]'));
         if (nonConnectedMember) {
           this._grayOutElement(nonConnectedMember);
-          this._grayOutElement(d3.selectAll('[data-destination-member-id="' + nonConnectedMemberId + '"]'));
-          this._grayOutElement(d3.selectAll('[data-source-member-id="' + nonConnectedMemberId + '"]'));
+          this._grayOutElement(d3.selectAll(this.querySelectorAll('[data-destination-member-id="' + nonConnectedMemberId + '"]')));
+          this._grayOutElement(d3.selectAll(this.querySelectorAll('[data-source-member-id="' + nonConnectedMemberId + '"]')));
         }
       }.bind(this));
     },
@@ -1343,7 +1343,7 @@
      * @private
      */
     _undoGrayOutAllElements: function () {
-      d3.selectAll('.' + this.GRAYED_OUT_CSS_CLASS).classed(this.GRAYED_OUT_CSS_CLASS, false);
+      d3.selectAll(this.querySelectorAll('.' + this.GRAYED_OUT_CSS_CLASS)).classed(this.GRAYED_OUT_CSS_CLASS, false);
     },
 
     /**
@@ -1351,7 +1351,7 @@
      * @private
      */
     _undoHighlightAllElements: function () {
-      d3.selectAll('.' + this.HIGHLIGHTED_CSS_CLASS).classed(this.HIGHLIGHTED_CSS_CLASS, false);
+      d3.selectAll(this.querySelectorAll('.' + this.HIGHLIGHTED_CSS_CLASS)).classed(this.HIGHLIGHTED_CSS_CLASS, false);
     },
 
     /**
