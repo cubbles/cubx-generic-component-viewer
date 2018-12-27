@@ -1,0 +1,111 @@
+#component_view_holder {
+    border: solid 1px #ddd;
+}
+
+rect.componentViewAtom.member.cubx-generic-component-viewer {
+    fill: #e7e7e7;
+}
+
+#component_view_holder_title {
+    display: none;
+}
+
+g#root {
+    opacity: 0;
+}
+
+text.componentViewHeaderLabel {
+    fill: #000;
+    stroke: none;
+    text-anchor: middle;
+}
+
+.componentView {
+    fill: #fff;
+    stroke: #000;
+    stroke-width: 1px;
+}
+
+.connectionView {
+    stroke: #000;
+    stroke-width: 1;
+    fill: none;
+}
+
+.arrowEnd {
+    stroke: #000;
+    stroke-width: 1;
+    fill: #000;
+}
+
+.slotViewAtom {
+    stroke: #000;
+    stroke-width: 1;
+    fill: #fff;
+}
+
+.slotViewLabel,
+.connectionViewLabel {
+    fill: #000;
+    stroke: none;
+}
+
+.info_tooltip {
+    background: #fff;
+    box-shadow: 0 0 5px #999999;
+    color: #333;
+    font-size: 14px;
+    position: fixed;
+    padding: 5px;
+    max-width: 16em;
+    word-wrap: break-word;
+    z-index: 1060;
+}
+
+.btn-toolbar {
+    padding-top: 1em;
+    padding-bottom: 1em;
+}
+
+.highlighted {
+    stroke-width: 3px;
+    stroke: #00ff38;
+    stroke-opacity: 0.8;
+}
+
+.grayed-out {
+    opacity: 0.3;
+}
+
+#hideDisconnectedB {
+    display: none;
+}
+
+.btn {
+    display: inline;
+}
+
+.componentView.member:hover,
+.connectionView.group:hover {
+    cursor: pointer;
+}
+
+#minimapDiagram {
+    position: relative;
+    border-color: #626262;
+    border-style: solid;
+    border-width: 1px;
+}
+
+#minimapDiagram .frame-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#minimapDiagram .frame {
+    fill: #94cedd;
+    opacity: 0.7;
+    stroke: #333;
+    stroke-width: 2px;
+}
