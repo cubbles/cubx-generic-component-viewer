@@ -100,7 +100,20 @@
      *  Observe the Cubbles-Component-Model: If value for slot 'definitions' has changed ...
      */
     modelDefinitionsChanged: function (definitions) {
-      this._startWorking();
+      if (this.getAutomaticStarting()) {
+        this._startWorking();
+      } else {
+        this.setStatus('pending');
+      }
+    },
+
+    /**
+     *  Observe the Cubbles-Component-Model: If value for slot 'startWorking' has changed ...
+     */
+    modelStartWorkingChanged: function (definitions) {
+      if (this.getStartWorking() && this.getStatus() ===  'pending') {
+        this._startWorking();
+      }
     },
 
     modelShowTitleChanged: function (showViewerTitle) {

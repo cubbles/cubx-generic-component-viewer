@@ -136,11 +136,28 @@
           {
             "slotId": "status",
             "type": "string",
-            "description": "Describes the status of the viewer ('init', 'working', 'ready').",
+            "description": "Describes the status of the viewer ('init', 'working', 'pending', 'ready').",
             "direction": [
               "output"
             ],
             "value": "init"
+          },
+          {
+            "slotId": "automaticStarting",
+            "type": "boolean",
+            "description": "Indicates whether the component should start working right after the definitions change.",
+            "direction": [
+              "input"
+            ],
+            "value": true
+          },
+          {
+            "slotId": "startWorking",
+            "type": "boolean",
+            "description": "Indicates that the component should start working. It is useful when 'automaticStarting' slot is set to false",
+            "direction": [
+              "input"
+            ]
           }
         ]
       }
