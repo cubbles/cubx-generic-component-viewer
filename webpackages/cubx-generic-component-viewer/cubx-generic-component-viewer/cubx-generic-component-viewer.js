@@ -1,16 +1,8 @@
 /* global $, d3, klay, XMLSerializer, Blob, saveAs */
 (function () {
   'use strict';
-  /**
-   * Get help:
-   * > Lifecycle callbacks:
-   * https://www.polymer-project.org/1.0/docs/devguide/registering-elements.html#lifecycle-callbacks
-   *
-   * Access the Cubbles-Component-Model:
-   * > Access slot values:
-   * slot 'a': this.getA(); | this.setA(value)
-   */
-  CubxPolymer({
+
+  CubxComponent({
     is: 'cubx-generic-component-viewer',
 
     _cubxReady: false,
@@ -59,24 +51,26 @@
     },
 
     /**
-     * Manipulate an element’s local DOM when the element is created and initialized.
-     */
-    ready: function () {
-    },
-
-    /**
      * Manipulate an element’s local DOM when the element is attached to the document.
      */
-    attached: function () {
+    connected: function () {
       this._setInitialStyleToViewHolder();
     },
 
     /**
      * Manipulate an element’s local DOM when the cubbles framework is initialized and ready to work.
      */
-    cubxReady: function () {
+    contextReady: function () {
       this._cubxReady = true;
       this._disconnectedSlotsHidden = false;
+      this._updateViewerTitle();
+      this._setListenersToButtons();
+    },
+
+    _setListenersToButtons: function () {
+      this.$$('#saveDiagramB').addEventListener('click', this._saveAsSvg.bind(this));
+      this.$$('#hideDisconnectedB').addEventListener('click', this._handleHIdeShowDisconnectedSlotsBtn.bind(this));
+      this.$$('#zoomToFitB').addEventListener('click', this._zoomToFit.bind(this));
     },
 
     /**
@@ -106,7 +100,20 @@
      *  Observe the Cubbles-Component-Model: If value for slot 'definitions' has changed ...
      */
     modelDefinitionsChanged: function (definitions) {
-      this._startWorking();
+      if (this.getAutomaticStarting()) {
+        this._startWorking();
+      } else {
+        this.setStatus('pending');
+      }
+    },
+
+    /**
+     *  Observe the Cubbles-Component-Model: If value for slot 'startWorking' has changed ...
+     */
+    modelStartWorkingChanged: function (definitions) {
+      if (this.getStartWorking() && this.getStatus() ===  'pending') {
+        this._startWorking();
+      }
     },
 
     modelShowTitleChanged: function (showViewerTitle) {
@@ -665,7 +672,7 @@
 
         self._drawMembers(componentsData);
         self._drawConnections(connectionsData);
-        if (d3.selectAll('.disconnected')[0].length > 0) {
+        if (self.querySelectorAll('.disconnected').length > 0) {
           self.$$('#hideDisconnectedB').style.display = 'inline';
           self.$$('#hideDisconnectedB').removeAttribute('disabled');
         }
@@ -982,10 +989,11 @@
 
     _createConnectionView: function (connectionGroup) {
       var connectionView = this._createD3Element('path', connectionGroup, 'connectionView');
+      var self = this;
       connectionView.attr('id', function (d) {
         // Remove disconnected class to source and target slots
-        d3.select('#' + d.sourcePort).classed('disconnected', false);
-        d3.select('#' + d.targetPort).classed('disconnected', false);
+        d3.select(self.querySelector('#' + d.sourcePort)).classed('disconnected', false);
+        d3.select(self.querySelector('#' + d.targetPort)).classed('disconnected', false);
         return d.id;
       })
         .attr('d', 'M0 0')
@@ -1163,7 +1171,7 @@
      * @param e
      * @private
      */
-    _handleHIdeShowDisconnectedSlotsButton: function (e) {
+    _handleHIdeShowDisconnectedSlotsBtn: function (e) {
       if (this._disconnectedSlotsHidden) {
         this._showDisconnectedSlots();
         this._updateHideShowDisconnectedSlotsToHide(e.currentTarget);
@@ -1193,11 +1201,11 @@
     },
 
     _hideDisconnectedSlots: function () {
-      d3.selectAll('.disconnected').style('display', 'none');
+      d3.selectAll(this.querySelectorAll('.disconnected')).style('display', 'none');
     },
 
     _showDisconnectedSlots: function () {
-      d3.selectAll('.disconnected').style('display', 'block');
+      d3.selectAll(this.querySelectorAll('.disconnected')).style('display', 'block');
     },
 
     /**
