@@ -52,7 +52,7 @@
         ],
         "dependencies": [
           {
-            "webpackageId": "cubx.core.rte@3.0.0-SNAPSHOT",
+            "webpackageId": "cubx.core.rte@3.0.0",
             "artifactId": "cubxcomponent"
           },
           {
